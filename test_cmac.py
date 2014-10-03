@@ -35,4 +35,8 @@ class TestDataLoader(unittest.TestCase):
         self.assertTrue(len(self.data_loader.output_data) > 0, 'Output data not loaded')
         self.assertTrue(len(self.data_loader.output_data[0]) == 3, 'Number of outputs wrong!')
 
-    
+def main():
+    unittest.main()
+
+if __name__ == '__main__': 
+    main()
