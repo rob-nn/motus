@@ -3,15 +3,42 @@ from gait_loader import *
 import math
 
 class CMAC(object):
-    def __init__(self, s_min, s_max, num_possible_values, num_active_cells):
+    def __init__(self, sensory_configs, num_active_cells):
+        self._num_active_cells = num_active_cells
+        for sensory_config in sensory_configs:
+            sensory_config.cmac = self
+            sensory_config.set_mapping()
+        
+    @property
+    def num_active_cells(self):
+        return self._num_active_cells
+                
+
+class CMACLegProsthesis(object):
+	def __init__(self, active_sensory_cells):
+		self._active_sensory_cells = active_sensory_cells
+
+	def train(self, data_loader): pass
+
+class Input(object):
+	def __init__(self, index, desc, min_val, max_val):
+		self._index = index
+		self._min_val = min_val
+		self._max_val = max_val
+		self._desc = desc
+	@property
+	def index(self):
+		return self._index
+
+class SensoryCellConfig(object):
+    def __init__(self, s_min, s_max, num_possible_values):
         self._s_min = s_min
         self._s_max = s_max
         self._num_possible_values = num_possible_values
-        self._num_active_cells = num_active_cells
-        self._set_mapping_address()
-        self._set_mapping()
+        self._cmac = None
 
-    def _set_mapping(self):
+    def set_mapping(self):
+        self._set_mapping_address()
         temp_map = []
         i = 0
         qtd = 0
@@ -47,7 +74,12 @@ class CMAC(object):
 
     def _set_mapping_address(self):
         self._mapping_address = linspace(self._s_min, self._s_max, self._num_possible_values)
-
+    @property
+    def cmac(self):
+        return self._cmac
+    @property.setter
+    def cmac(self, value):
+        self._cmac = value
     @property
     def mapping(self):
         return self._mapping
@@ -56,7 +88,7 @@ class CMAC(object):
         return self._mapping_address
     @property
     def num_active_cells(self):
-        return self._num_active_cells
+        return self._cmac.num_active_cells
     @property
     def num_possible_values(self):
         return self._num_possible_values
@@ -67,23 +99,7 @@ class CMAC(object):
     def s_max(self):
         return self._s_max
 
-                
-
-class CMACLegProsthesis(object):
-	def __init__(self, active_sensory_cells):
-		self._active_sensory_cells = active_sensory_cells
-
-	def train(self, data_loader): pass
-
-class Input(object):
-	def __init__(self, index, desc, min_val, max_val):
-		self._index = index
-		self._min_val = min_val
-		self._max_val = max_val
-		self._desc = desc
-	@property
-	def index(self):
-		return self._index
+   
 
 
 def generate_inputs():
