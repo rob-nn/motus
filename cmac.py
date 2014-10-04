@@ -5,13 +5,18 @@ import math
 class CMAC(object):
     def __init__(self, sensory_configs, num_active_cells):
         self._num_active_cells = num_active_cells
-        for sensory_config in sensory_configs:
+        self._sensory_configs = sensory_configs
+        for sensory_config in self._sensory_configs:
             sensory_config.cmac = self
             sensory_config.set_mapping()
         
     @property
     def num_active_cells(self):
         return self._num_active_cells
+
+    @property
+    def sensory_cell_configs(self):
+        return self._sensory_configs
                 
 
 class CMACLegProsthesis(object):
@@ -77,7 +82,7 @@ class SensoryCellConfig(object):
     @property
     def cmac(self):
         return self._cmac
-    @property.setter
+    @cmac.setter
     def cmac(self, value):
         self._cmac = value
     @property
@@ -98,13 +103,4 @@ class SensoryCellConfig(object):
     @property
     def s_max(self):
         return self._s_max
-
-   
-
-
-def generate_inputs():
-	inputs = []
-	for i in range(9):
-		inputs.append(Input(i, 'Attr ' + str(i), -10, 10))
-	return inputs
 
