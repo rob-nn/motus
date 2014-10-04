@@ -1,4 +1,5 @@
 class DataLoader(object):
+
 	def __init__(self, inputs, output_indexes):
 		self._data = []
 		self._inputs = inputs
@@ -36,7 +37,6 @@ class DataLoader(object):
 			for o in self._output_indexes:
 				outputs.append(item[o])
 			self._output_data.append(outputs)
-			
 		
 	@property
 	def input_data(self):
@@ -50,4 +50,13 @@ class DataLoader(object):
 	def data(self):
 		return self._data
 
+class Input(object):
+	def __init__(self, index, desc, min_val, max_val):
+		self._index = index
+		self._min_val = min_val
+		self._max_val = max_val
+		self._desc = desc
 
+	@property
+	def index(self):
+		return self._index

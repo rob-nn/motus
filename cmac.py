@@ -3,12 +3,18 @@ from gait_loader import *
 import math
 
 class CMAC(object):
+
     def __init__(self, sensory_configs, num_active_cells):
         self._num_active_cells = num_active_cells
         self._sensory_configs = sensory_configs
+        self._set_sensory_mappings()
+
+    def _set_sensory_mappings(self):
         for sensory_config in self._sensory_configs:
             sensory_config.cmac = self
             sensory_config.set_mapping()
+
+    def make_hiper_space(self): pass
         
     @property
     def num_active_cells(self):
@@ -24,16 +30,6 @@ class CMACLegProsthesis(object):
 		self._active_sensory_cells = active_sensory_cells
 
 	def train(self, data_loader): pass
-
-class Input(object):
-	def __init__(self, index, desc, min_val, max_val):
-		self._index = index
-		self._min_val = min_val
-		self._max_val = max_val
-		self._desc = desc
-	@property
-	def index(self):
-		return self._index
 
 class SensoryCellConfig(object):
     def __init__(self, s_min, s_max, num_possible_values):
@@ -103,4 +99,3 @@ class SensoryCellConfig(object):
     @property
     def s_max(self):
         return self._s_max
-

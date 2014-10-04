@@ -1,11 +1,10 @@
 import unittest
-import cmac
 from gait_loader import *
 class TestDataLoader(unittest.TestCase):
     def setUp(self):
         inputs = []
 	for i in range(9):
-		inputs.append(cmac.Input(i, 'Attr ' + str(i), -10, 10))
+		inputs.append(Input(i, 'Attr ' + str(i), -10, 10))
         self.data_loader = DataLoader(inputs, [9, 10, 11])
 
     def tearDown(self):
