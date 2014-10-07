@@ -7,9 +7,11 @@ class TestCmac(unittest.TestCase):
     def setUp(self):
         self._sense_conf = cmac.SensoryCellConfig(0., 12., 13)
         self._sense_conf_2 = cmac.SensoryCellConfig(0.1, 1., 10)
+        self._sense_conf_3 = cmac.SensoryCellConfig(-1, 1., 2)
         confs = []
         confs.append(self._sense_conf)
         confs.append(self._sense_conf_2)
+	confs.append(self._sense_conf_3)
         self._cmac = cmac.CMAC(confs, 4)
 
     def tearDown(self):
@@ -59,6 +61,10 @@ class TestCmac(unittest.TestCase):
         self.assertTrue(self._sense_conf.mapping[10].tolist() == [12, 13, 10, 11])
         self.assertTrue(self._sense_conf.mapping[11].tolist() == [12, 13, 14, 11])
         self.assertTrue(self._sense_conf.mapping[12].tolist() == [12, 13, 14, 15])
+
+    def test_make_hyperplane(self):
+	self._cmac.make_hyperplane()
+	self.assertTrue(self._cmac.hyperplane.shape == (13,10,2))
  
 
     def test_mapping_shape_all_sensory_cell_configs(self):

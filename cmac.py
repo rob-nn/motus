@@ -14,8 +14,27 @@ class CMAC(object):
             sensory_config.cmac = self
             sensory_config.set_mapping()
 
-    def make_hiper_space(self): pass
+    def make_hyperplane(self):
+        hyper = []
+        for conf in self.sensory_cell_configs:
+            self._append_hyper(hyper, len(conf.mapping))
         
+        for i in range(len(self.sensory_cell_configs)):
+            for j in range(len(self.sensory_cell_configs[i].mapping)):
+                
+ 
+        self._hyperplane = array(hyper)
+
+    def _append_hyper(self, hyper, num_elements):
+        if type(hyper) is list and len(hyper) == 0:
+            for i in range(num_elements):
+                hyper.append([])
+        else:
+            for l in hyper:
+                self._append_hyper(l, num_elements, final_conf)
+                
+            
+            
     @property
     def num_active_cells(self):
         return self._num_active_cells
@@ -23,6 +42,10 @@ class CMAC(object):
     @property
     def sensory_cell_configs(self):
         return self._sensory_configs
+    
+    @property
+    def hyperplane(self):
+        return self._hyperplane
                 
 
 class CMACLegProsthesis(object):
