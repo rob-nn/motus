@@ -33,6 +33,14 @@ class TestCmac(unittest.TestCase):
 	self.assertTrue( \
 		(around(self._sense_conf_2.mapping_address.tolist(), 1) == \
 		around([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.], 1)).all())
+    def test_get_index(self):
+	self.assertTrue(self._cmac.get_index(0.25, self._sense_conf_2) == 1)
+	self.assertTrue(self._cmac.get_index(1., self._sense_conf_2) == 9)
+	self.assertTrue(self._cmac.get_index(5, self._sense_conf_2) == 9)
+	self.assertTrue(self._cmac.get_index(0.1, self._sense_conf_2) == 0)
+	self.assertTrue(self._cmac.get_index(0, self._sense_conf_2) == 0)
+	self.assertTrue(self._cmac.get_index(0.95, self._sense_conf_2) == 8)
+	self.assertTrue(self._cmac.get_index(0.4, self._sense_conf_2) == 3)
 
 
     def test_mapping_lines_sens_conf2(self):
@@ -64,7 +72,25 @@ class TestCmac(unittest.TestCase):
 
     def test_make_hyperplane(self):
 	self._cmac.make_hyperplane()
-	self.assertTrue(self._cmac.hyperplane.shape == (13,10,2))
+	self.assertTrue(len(self._cmac.hyperplane) == (13 *10*2))
+	self.assertTrue(self._cmac.hyperplane[0] == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])
+	self.assertTrue(self._cmac.hyperplane[-1] == [[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])
+	self._cmac.make_weight_table()
+	self.assertTrue(max(self._cmac.weight_table.keys()) == 41212)
+	self.assertTrue(self._cmac.recode([12., 1., 1.])== [41212, 10913, 21014, 31115])
+	self.assertTrue(self._cmac.recode([0,0,0])== [0, 10101, 20202, 30303])
+	self.assertTrue(self._cmac.recode([5.25, 0.37, -0.2])== [408, 10505, 20206, 30307])
+	self.assertIsNotNone(self._cmac.weight_table[41212])
+	self.assertIsNotNone(self._cmac.weight_table[10913])
+	self.assertIsNotNone(self._cmac.weight_table[21014])
+	self.assertIsNotNone(self._cmac.weight_table[31115])
+	self.assertIsNotNone(self._cmac.weight_table[10101])
+	self.assertIsNotNone(self._cmac.weight_table[20202])
+	self.assertIsNotNone(self._cmac.weight_table[30303])
+	self.assertIsNotNone(self._cmac.weight_table[408])
+	self.assertIsNotNone(self._cmac.weight_table[10505])
+	self.assertIsNotNone(self._cmac.weight_table[20206])
+	self.assertIsNotNone(self._cmac.weight_table[30307])
  
 
     def test_mapping_shape_all_sensory_cell_configs(self):

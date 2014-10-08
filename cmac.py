@@ -1,6 +1,7 @@
 from numpy import *
 from gait_loader import *
 import math
+import random
 
 class CMAC(object):
 
@@ -8,6 +9,8 @@ class CMAC(object):
         self._num_active_cells = num_active_cells
         self._sensory_configs = sensory_configs
         self._set_sensory_mappings()
+        random.seed()
+        
 
     def _set_sensory_mappings(self):
         for sensory_config in self._sensory_configs:
@@ -15,26 +18,84 @@ class CMAC(object):
             sensory_config.set_mapping()
 
     def make_hyperplane(self):
-        hyper = []
-        for conf in self.sensory_cell_configs:
-            self._append_hyper(hyper, len(conf.mapping))
-        
-        for i in range(len(self.sensory_cell_configs)):
-            for j in range(len(self.sensory_cell_configs[i].mapping)):
-                
- 
-        self._hyperplane = array(hyper)
+#        hyper = []
+#        for conf in self.sensory_cell_configs:
+#            self._append_hyper(hyper, len(conf.mapping))
+#        self._hyperplane = array(hyper)
+        l =[]
+        for dim in self.sensory_cell_configs:
+            l = self._append_dim(l, dim.mapping)
+        self._hyperplane = l
 
-    def _append_hyper(self, hyper, num_elements):
-        if type(hyper) is list and len(hyper) == 0:
-            for i in range(num_elements):
-                hyper.append([])
-        else:
-            for l in hyper:
-                self._append_hyper(l, num_elements, final_conf)
-                
+    def _append_dim(self, l, values):
+        if l == []:
+            for i in values:
+                temp = []
+                temp.append(i.tolist())
+                l.append(temp)
+            return l
+        new_list = []
+        for item in l:
+            for value in values:
+                new_item = item[:]
+                new_item.append(value.tolist())
+                new_list.append(new_item)
+        return new_list
+
+#    def _append_hyper(self, hyper, num_elements):
+#        if type(hyper) is list and len(hyper) == 0:
+#            for i in range(num_elements):
+#                hyper.append([])
+#        else:
+#            for l in hyper:
+#                self._append_hyper(l, num_elements)
             
+    def get_address(self, recode_vector):
+        num_dig = []
+        for conf in self.sensory_cell_configs:
+            num_dig.append(int(floor(log10(conf.mapping.max())+1)))
+        address = 0
+        acc = 0
+        for j in range(len(self.sensory_cell_configs)):
+            address = address + int(recode_vector[j]) * 10 ** acc
+            acc = acc + num_dig[j] 
+        return address
+
+    def make_weight_table(self):
+        table = {}
+        for item in self.hyperplane:
+            sens_values = array(item, dtype=int64)                
+            for i in range(self.num_active_cells):
+                temp = sens_values[:, i].tolist()
+                address = self.get_address(temp)
+                table[address] = random.uniform(-0.2,0.2)
+        self._table = table
+
+    def recode(self, input_vector):
+        recode_vector = []
+        sens_values = []
+        for i in range(len(self.sensory_cell_configs)):
+            index = self.get_index(input_vector[i], self.sensory_cell_configs[i])
+            sens_values.append(self.sensory_cell_configs[i].mapping[index])
+        sens_values = array(sens_values, dtype=int64)
+        for i in range(self.num_active_cells):
+            temp = sens_values[:, i].tolist()
+            address = self.get_address(temp)
+            recode_vector.append(address)
+        return recode_vector
+    
+    def get_index(self, value, config):
+        if value <= config.s_min:
+            return 0;
+        if value >= config.s_max:
+            return len(config.mapping_address) -1
+        for i in range(len(config.mapping_address)):
+            if config.mapping_address[i] > value:
+                return i-1 
             
+    @property
+    def weight_table(self):
+        return self._table            
     @property
     def num_active_cells(self):
         return self._num_active_cells
