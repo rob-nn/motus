@@ -91,26 +91,13 @@ class TestCmac(unittest.TestCase):
 	self.assertIsNotNone(self._cmac.weight_table[10505])
 	self.assertIsNotNone(self._cmac.weight_table[20206])
 	self.assertIsNotNone(self._cmac.weight_table[30307])
+	self.assertTrue(self._cmac.fire([4, 0.3, -0.5]) != 0)
  
 
     def test_mapping_shape_all_sensory_cell_configs(self):
 	for sens in self._cmac.sensory_cell_configs:
 	        self.assertTrue(sens.mapping.shape == (sens.num_possible_values, sens.num_active_cells))
 
-class TestCmacLegProsthesis(unittest.TestCase):
-    def setUp(self):
-        inputs = []
-	for i in range(9):
-		inputs.append(cmac.Input(i, 'Attr ' + str(i), -10, 10))
-        self.cmac = cmac.CMACLegProsthesis(active_sensory_cells = 4)
-        self.data_loader = cmac.DataLoader(inputs, [9, 10, 11])
-    
-    def tearDown(self):
-        self.cmac = None
-        self.data_loader = None
-
-    def test_train(self):
-        self.cmac.train(self.data_loader)
 
 if __name__ == '__main__':
     unittest.main()

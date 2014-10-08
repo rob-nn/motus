@@ -1,22 +1,17 @@
 import unittest
 from gait_loader import *
 class TestDataLoader(unittest.TestCase):
-    def setUp(self):
-        inputs = []
-	for i in range(9):
-		inputs.append(Input(i, 'Attr ' + str(i), -10, 10))
-        self.data_loader = DataLoader(inputs, [9, 10, 11])
+	def setUp(self):
+		self._loader3 = loadWalk3()
 
-    def tearDown(self):
-        self.data_loader = None
+	def tearDown(self):
+        	self._loader3 = None
 
-    def test_input_data(self):
-        self.assertTrue(len(self.data_loader.input_data) > 0, 'Input data not loaded')
-        self.assertTrue(len(self.data_loader.input_data[0]) == 9, 'Number of inputs wrong!')
+    	def test_shape(self):
+		self.assertTrue(self._loader3.data.shape ==(696, 12))
 
-    def test_output_data(self):
-        self.assertTrue(len(self.data_loader.output_data) > 0, 'Output data not loaded')
-        self.assertTrue(len(self.data_loader.output_data[0]) == 3, 'Number of outputs wrong!')
+	def test_data_descs(self):
+		self.assertTrue(len(self._loader3.data_descs) == 12)
 
 if __name__ == '__main__':
     unittest.main()

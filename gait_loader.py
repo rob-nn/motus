@@ -1,22 +1,21 @@
+from numpy import *
 class DataLoader(object):
-
-	def __init__(self, inputs, output_indexes):
-		self._data = []
-		self._inputs = inputs
-		self._output_indexes = output_indexes
-		self._input_data = []
-		self._output_data = []
+	def __init__(self, file_name):
+		self._data = None	
+		self._file_name = file_name
 		self._load_data()
-		self._generate_inputs_outputs()
+		self._data_descs =[]
+		self._generate_data_descs()
 
 	def _load_data(self):
-		file = open('./dynamics_data/dynamics_walk3.mat')
+		file = open(self._file_name)
 		data = file.readlines()
 		file.close()
 		j = 0
+		data_list = []
 		for i in range(len(data)):
 			line = data[j]
-			if len(line)<=1 or line[0] == '#':
+			if len(line) <=1 or line[0] == '#':
 				data.pop(j)
 				j = j -1
 			else:
@@ -24,33 +23,37 @@ class DataLoader(object):
 				temp = []
 				for word in words:
 					temp.append(float(word))
-				self._data.append(temp)
+				data_list.append(temp)
 			j = j + 1
+		self._data = array(data_list)
 
-	def _generate_inputs_outputs(self):
-		for item in self._data:
-			inputs = []
-			outputs = []
-			for i in self._inputs:
-				inputs.append(item[i.index])		
-			self._input_data.append(inputs)
-			for o in self._output_indexes:
-				outputs.append(item[o])
-			self._output_data.append(outputs)
-		
-	@property
-	def input_data(self):
-		return self._input_data
+	def _generate_data_descs(self):
+		self._data_descs.append(self._generate_data_desc(0, 'Left angular velocities'))
+		self._data_descs.append(self._generate_data_desc(1, 'Right angular velocities'))
+		self._data_descs.append(self._generate_data_desc(2, 'Left angles'))
+		self._data_descs.append(self._generate_data_desc(3, 'Right angles'))
+		self._data_descs.append(self._generate_data_desc(4, 'Left angular accelarations'))
+		self._data_descs.append(self._generate_data_desc(5, 'Right angular accelerations'))
+		self._data_descs.append(self._generate_data_desc(6, 'Left x angular velocities'))
+		self._data_descs.append(self._generate_data_desc(7, 'Left y angular velocities'))
+		self._data_descs.append(self._generate_data_desc(8, 'Left z angular velocities'))
+		self._data_descs.append(self._generate_data_desc(9, 'Right x angular velocities'))
+		self._data_descs.append(self._generate_data_desc(10, 'Right y angular velocities'))
+		self._data_descs.append(self._generate_data_desc(11, 'Right z angular velocities'))
 
-	@property
-	def output_data(self):
-		return self._output_data
+	def _generate_data_desc(self, index, desc):
+		column = self.data[:, index]
+		return DataDesc(index, desc, column.min(), column.max()) 
 
 	@property
 	def data(self):
 		return self._data
 
-class Input(object):
+	@property
+	def data_descs(self):
+		return self._data_descs
+
+class DataDesc(object):
 	def __init__(self, index, desc, min_val, max_val):
 		self._index = index
 		self._min_val = min_val
@@ -60,3 +63,15 @@ class Input(object):
 	@property
 	def index(self):
 		return self._index
+
+	@property
+	def min_val(self):
+		return self._min_val
+	
+	@property
+	def max_val(self):
+		return self._max_val
+	
+
+def loadWalk3():
+	return DataLoader('./dynamics_data/dynamics_walk3.mat')

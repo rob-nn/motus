@@ -2,6 +2,7 @@ from numpy import *
 from gait_loader import *
 import math
 import random
+import gait_loader
 
 class CMAC(object):
 
@@ -10,7 +11,6 @@ class CMAC(object):
         self._sensory_configs = sensory_configs
         self._set_sensory_mappings()
         random.seed()
-        
 
     def _set_sensory_mappings(self):
         for sensory_config in self._sensory_configs:
@@ -92,6 +92,13 @@ class CMAC(object):
         for i in range(len(config.mapping_address)):
             if config.mapping_address[i] > value:
                 return i-1 
+
+    def fire(self, input_vector):
+        recode_vector = self.recode(input_vector)
+        p = 0
+        for address in recode_vector:
+            p = p + self.weight_table[address]    
+        return p
             
     @property
     def weight_table(self):
@@ -107,13 +114,69 @@ class CMAC(object):
     @property
     def hyperplane(self):
         return self._hyperplane
-                
 
-class CMACLegProsthesis(object):
-	def __init__(self, active_sensory_cells):
-		self._active_sensory_cells = active_sensory_cells
+class Train(object, alpha):
+    def __init__(self, cmac, data_in, data_out, alpha, num_iterations):
+        self._cmac = cmac
+        self._data_in = data_in
+        self._data_out = data_out
+        self._alpha = alpha
 
-	def train(self, data_loader): pass
+    def train(self):
+        for iteration in num_iterations:
+            for i in range(len(self.data_in)):
+                input_vector = self.data_in[i, :].tolist()
+                out = self.cmac.fire(input_vector)
+                recode_vector = self.cmac.recode(input_vector)
+                for recode in recode_vector:
+                    self.cmac.weight_table[recode] = self.cmac.weight_table[recode] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
+           
+    @property 
+    def alpha(self):
+        return self._alpha 
+
+    @property
+    def data_in(self):
+        return self._data_in
+
+    @property
+    def data_out(self):
+        return self._data_out
+    
+    @property
+    def cmac(self):
+        return self._cmac
+
+class CMACLegProsthesis(CMAC):
+    def __init__(self):
+        loader = gait_loader.loadWalk3() 
+        confs = []
+        i = 0
+        for desc in loader.data_descs:
+            new_sensory_config = SensoryCellConfig(desc.min_val, desc.max_val, 100)
+            confs.append(new_sensory)
+            i = i + 1
+            if i == 9: break
+        super(CMACLegProsthesis, self).__init__(confs, 4)
+
+        data = loader.data[:, 0]
+        data = data_in.concatenate(loader.data[:,2], axis = 1)
+        data = data_in.concatenate(loader.data[:,6], axis = 1)
+        data = data_in.concatenate(loader.data[:,7], axis = 1)
+        data = data_in.concatenate(loader.data[:,8], axis = 1)
+       
+        data_in = array([]) 
+        data_test = array([])
+        for i in len(data):
+            if i%2 == 0:
+                data_in.concatenate(loader.data[i, :])
+            else 
+                data_test.concatenate(loader.data[i, :])
+
+        train = Train(self, data_in, loader.data[:, 9:12], 0.5)
+
+    def train(self, data_loader): 
+        
 
 class SensoryCellConfig(object):
     def __init__(self, s_min, s_max, num_possible_values):
@@ -154,7 +217,6 @@ class SensoryCellConfig(object):
             temp_map.extend(temp)    
             if stop: break
             i = i + self.num_active_cells 
-
         self._mapping = array(temp_map)
 
     def _set_mapping_address(self):
