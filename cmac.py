@@ -3,6 +3,7 @@ from gait_loader import *
 import math
 import random
 import gait_loader
+import matplotlib.pyplot as plt
 
 class CMAC(object):
 
@@ -11,6 +12,10 @@ class CMAC(object):
         self._sensory_configs = sensory_configs
         self._set_sensory_mappings()
         random.seed()
+
+    def generate_tables(self):
+        self.make_hyperplane()
+        self.make_weight_table()
 
     def _set_sensory_mappings(self):
         for sensory_config in self._sensory_configs:
@@ -115,15 +120,16 @@ class CMAC(object):
     def hyperplane(self):
         return self._hyperplane
 
-class Train(object, alpha):
+class Train(object):
     def __init__(self, cmac, data_in, data_out, alpha, num_iterations):
         self._cmac = cmac
         self._data_in = data_in
         self._data_out = data_out
         self._alpha = alpha
+        self._num_iterations = num_iterations
 
     def train(self):
-        for iteration in num_iterations:
+        for iteration in range(self._num_iterations):
             for i in range(len(self.data_in)):
                 input_vector = self.data_in[i, :].tolist()
                 out = self.cmac.fire(input_vector)
@@ -146,37 +152,6 @@ class Train(object, alpha):
     @property
     def cmac(self):
         return self._cmac
-
-class CMACLegProsthesis(CMAC):
-    def __init__(self):
-        loader = gait_loader.loadWalk3() 
-        confs = []
-        i = 0
-        for desc in loader.data_descs:
-            new_sensory_config = SensoryCellConfig(desc.min_val, desc.max_val, 100)
-            confs.append(new_sensory)
-            i = i + 1
-            if i == 9: break
-        super(CMACLegProsthesis, self).__init__(confs, 4)
-
-        data = loader.data[:, 0]
-        data = data_in.concatenate(loader.data[:,2], axis = 1)
-        data = data_in.concatenate(loader.data[:,6], axis = 1)
-        data = data_in.concatenate(loader.data[:,7], axis = 1)
-        data = data_in.concatenate(loader.data[:,8], axis = 1)
-       
-        data_in = array([]) 
-        data_test = array([])
-        for i in len(data):
-            if i%2 == 0:
-                data_in.concatenate(loader.data[i, :])
-            else 
-                data_test.concatenate(loader.data[i, :])
-
-        train = Train(self, data_in, loader.data[:, 9:12], 0.5)
-
-    def train(self, data_loader): 
-        
 
 class SensoryCellConfig(object):
     def __init__(self, s_min, s_max, num_possible_values):

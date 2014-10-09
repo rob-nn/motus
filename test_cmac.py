@@ -1,6 +1,7 @@
 import unittest
 import cmac
 from numpy import *
+import random
 
 class TestCmac(unittest.TestCase):
 
@@ -98,6 +99,29 @@ class TestCmac(unittest.TestCase):
 	for sens in self._cmac.sensory_cell_configs:
 	        self.assertTrue(sens.mapping.shape == (sens.num_possible_values, sens.num_active_cells))
 
+class TestTrain(unittest.TestCase):
+    def setUp(self):
+        confs = []
+        confs.append(cmac.SensoryCellConfig(-10., 10., 100))
+        confs.append(cmac.SensoryCellConfig(-10., 10., 100))
+        _cmac = cmac.CMAC(confs, 4)
+        _cmac.generate_tables()
+        data_in = array([])
+        data_out = array([])
+        for i in range(100):
+            n1 = random.uniform(-100, 100)
+            n2 = random.uniform(-100, 100)
+            temp = array([n1, n2])
+            data_in = concatenate((data_in, temp))
+            data_out = concatenate((data_out, array([random.uniform(-100, 100)])))
+        self._train = cmac.Train(cmac, data_in, data_out, 0.5, 10)
+        
+        
+    
+    def test_train(self): 
+        self._train.train()
+        
+   
 
 if __name__ == '__main__':
     unittest.main()
