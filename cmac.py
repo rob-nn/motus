@@ -129,13 +129,18 @@ class Train(object):
         self._num_iterations = num_iterations
 
     def train(self):
+	self.E = []
         for iteration in range(self._num_iterations):
+	    err =0
             for i in range(len(self.data_in)):
                 input_vector = self.data_in[i, :].tolist()
                 out = self.cmac.fire(input_vector)
                 recode_vector = self.cmac.recode(input_vector)
                 for recode in recode_vector:
                     self.cmac.weight_table[recode] = self.cmac.weight_table[recode] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
+		    err = err+ ((self.data_out[i] -out)**2)/2
+	    self.E.append(err)
+	    if iteration % 10 == 0: print iteration
            
     @property 
     def alpha(self):

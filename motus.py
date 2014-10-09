@@ -39,7 +39,7 @@ class CMACLegProsthesis(cmac.CMAC):
         data_test = None
         for i in range(data.shape[0]):
             new = reshape(data[i, :], (1, data.shape[1]))
-            out = reshape(data[i, :], (1, data.shape[1]))
+            out = reshape(loader.data[i,3], (1,1))
             if i % 2 == 0:
                 if data_in == None:
                     data_in = new
@@ -62,8 +62,9 @@ class CMACLegProsthesis(cmac.CMAC):
         self._data_test = data_test
 
     def train(self): 
-        t = cmac.Train(self, self._data_in, self._data_out, 0.5, 10)
+        t = cmac.Train(self, self._data_in, self._data_out, 0.1, 200)
         t.train()
+        self.t = t
     
     def plot_data(self):
         for i in range(self._data_in.shape[1]):
@@ -80,17 +81,19 @@ class CMACLegProsthesis(cmac.CMAC):
         return result
 
     def plot_test(self):
+        plt.figure()
+        plt.plot(self.t.E)
         test_result = self.fire_test()
         plt.figure()
         plt.hold(True)
-        plt.plot(self._data_out.tolist(), 'b')
+        plt.plot(self._data_out_test.tolist(), 'b')
         plt.plot(test_result, 'r')
         plt.show()
 
 def main():
     cmac = CMACLegProsthesis()
-    cmac.train()
     #cmac.plot_data()
+    cmac.train()
     cmac.plot_test()
 
 
