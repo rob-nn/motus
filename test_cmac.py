@@ -74,8 +74,8 @@ class TestCmac(unittest.TestCase):
     def test_make_hyperplane(self):
 	self._cmac.make_hyperplane()
 	self.assertTrue(len(self._cmac.hyperplane) == (13 *10*2))
-	self.assertTrue(self._cmac.hyperplane[0] == [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])
-	self.assertTrue(self._cmac.hyperplane[-1] == [[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])
+	self.assertTrue(all(self._cmac.hyperplane[0] == array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])))
+	self.assertTrue(all(self._cmac.hyperplane[-1] == array([[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])))
 	self._cmac.make_weight_table()
 	self.assertTrue(max(self._cmac.weight_table.keys()) == 41212)
 	self.assertTrue(self._cmac.recode([12., 1., 1.])== [41212, 10913, 21014, 31115])
@@ -99,6 +99,16 @@ class TestCmac(unittest.TestCase):
 	for sens in self._cmac.sensory_cell_configs:
 	        self.assertTrue(sens.mapping.shape == (sens.num_possible_values, sens.num_active_cells))
 
+class TestLongRange(unittest.TestCase):
+    def setUp(self):
+        confs = []
+        confs.append(cmac.SensoryCellConfig(0., 1., 100))
+        confs.append(cmac.SensoryCellConfig(0., 1., 100))
+        self._cmac = cmac.CMAC(confs, 4)
+
+    def testRun(self):
+        self._cmac.generate_tables()
+
 class TestTrain(unittest.TestCase):
     def setUp(self):
         confs = []
@@ -106,15 +116,17 @@ class TestTrain(unittest.TestCase):
         confs.append(cmac.SensoryCellConfig(-10., 10., 100))
         _cmac = cmac.CMAC(confs, 4)
         _cmac.generate_tables()
-        data_in = array([])
+        data_in = None
         data_out = array([])
         for i in range(100):
             n1 = random.uniform(-100, 100)
             n2 = random.uniform(-100, 100)
-            temp = array([n1, n2])
-            data_in = concatenate((data_in, temp))
+            temp = array([[n1, n2]])
+            if data_in == None: data_in = temp
+            else: data_in = concatenate((data_in, temp))
             data_out = concatenate((data_out, array([random.uniform(-100, 100)])))
-        self._train = cmac.Train(cmac, data_in, data_out, 0.5, 10)
+        data_out = reshape(data_out, (len(data_out), 1))
+        self._train = cmac.Train(_cmac, data_in, data_out, 0.5, 10)
         
         
     
@@ -122,6 +134,12 @@ class TestTrain(unittest.TestCase):
         self._train.train()
         
    
+def main():
+    unittest.main()
+
+def run_tests():
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestCmac)
+    unittest.TextTestRunner().run(suite)
 
 if __name__ == '__main__':
-    unittest.main()
+    main()

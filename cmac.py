@@ -1,7 +1,6 @@
 from numpy import *
 from gait_loader import *
 import math
-import random
 import gait_loader
 import matplotlib.pyplot as plt
 
@@ -21,16 +20,16 @@ class CMAC(object):
         for sensory_config in self._sensory_configs:
             sensory_config.cmac = self
             sensory_config.set_mapping()
+        self._num_dig = [0]
+        for conf in self.sensory_cell_configs[0:-1]:
+            self._num_dig.append(self._num_dig[-1]+ int(floor(log10(conf.mapping.max())+1)))
+        self._num_dig = 10**array(self._num_dig)
 
     def make_hyperplane(self):
-#        hyper = []
-#        for conf in self.sensory_cell_configs:
-#            self._append_hyper(hyper, len(conf.mapping))
-#        self._hyperplane = array(hyper)
         l =[]
         for dim in self.sensory_cell_configs:
             l = self._append_dim(l, dim.mapping)
-        self._hyperplane = l
+        self._hyperplane = array(l, dtype=int64)
 
     def _append_dim(self, l, values):
         if l == []:
@@ -47,33 +46,16 @@ class CMAC(object):
                 new_list.append(new_item)
         return new_list
 
-#    def _append_hyper(self, hyper, num_elements):
-#        if type(hyper) is list and len(hyper) == 0:
-#            for i in range(num_elements):
-#                hyper.append([])
-#        else:
-#            for l in hyper:
-#                self._append_hyper(l, num_elements)
-            
     def get_address(self, recode_vector):
-        num_dig = []
-        for conf in self.sensory_cell_configs:
-            num_dig.append(int(floor(log10(conf.mapping.max())+1)))
-        address = 0
-        acc = 0
-        for j in range(len(self.sensory_cell_configs)):
-            address = address + int(recode_vector[j]) * 10 ** acc
-            acc = acc + num_dig[j] 
-        return address
+        return dot(self._num_dig, recode_vector)
 
     def make_weight_table(self):
         table = {}
         for item in self.hyperplane:
-            sens_values = array(item, dtype=int64)                
-            for i in range(self.num_active_cells):
-                temp = sens_values[:, i].tolist()
-                address = self.get_address(temp)
-                table[address] = random.uniform(-0.2,0.2)
+            sens_values = item
+            address = self.get_address(item)
+            for add in address:
+                table[add] = 0 #random.uniform(-0.2,0.2)
         self._table = table
 
     def recode(self, input_vector):
@@ -138,7 +120,7 @@ class Train(object):
                 recode_vector = self.cmac.recode(input_vector)
                 for recode in recode_vector:
                     self.cmac.weight_table[recode] = self.cmac.weight_table[recode] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
-		    err = err+ ((self.data_out[i] -out)**2)/2
+		    err = err+ ((self.data_out[i] - out)**2)/2
 	    self.E.append(err)
 	    if iteration % 10 == 0: print iteration
            

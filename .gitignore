@@ -3,3 +3,4 @@ octave-workspace
 .DS_Store
 *.swp
 *.pyc
+*.prof*
