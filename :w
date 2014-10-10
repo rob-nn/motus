@@ -26,20 +26,23 @@ class CMAC(object):
         self._num_dig = 10**array(self._num_dig)
 
     def make_hyperplane(self):
-        l = None
+        l =[]
         for dim in self.sensory_cell_configs:
             l = self._append_dim(l, dim.mapping)
         self._hyperplane = array(l, dtype=int64)
 
     def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
+        if l == []:
+            for i in values:
+                temp = []
+                temp.append(i.tolist())
+                l.append(temp)
             return l
-        new_list = [] 
+        new_list = []
         for item in l:
             for value in values:
                 new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
+                new_item.append(value.tolist())
                 new_list.append(new_item)
         return new_list
 
@@ -47,12 +50,12 @@ class CMAC(object):
         return dot(self._num_dig, recode_vector)
 
     def make_weight_table(self):
-        table = unique(array([self.get_address(item) for item in self.hyperplane]))
-        num = table.shape[0]
-        table = concatenate((reshape(table, (num,1)), \
-            random.uniform(-0.2, 0.2, (num,1))), axis=1)
-        self._table = dict(table)
-        
+        pos = 0
+        table = array([self.get_address(item) for item in self.hyperplane]).unique()
+        pos = pos + self.num_active_cells]
+        table = unique(table)
+        self._table = table
+
     def recode(self, input_vector):
         recode_vector = []
         sens_values = []
