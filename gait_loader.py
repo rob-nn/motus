@@ -53,6 +53,15 @@ class DataLoader(object):
 	def data_descs(self):
 		return self._data_descs
 
+        def normalize(self, index):
+                return array((self.data[:, index]  - self.data_descs[index].min_val) / \
+                    (self.data_descs[index].max_val - self.data_descs[index].min_val))
+        def normalize_all(self):
+            new_data = array([])
+            for i in range(self.data.shape[1]):
+                    new_data = concatenate((new_data, self.normalize(i)))
+            return reshape(new_data, self.data.shape) 
+
 class DataDesc(object):
 	def __init__(self, index, desc, min_val, max_val):
 		self._index = index
