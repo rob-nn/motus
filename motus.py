@@ -20,7 +20,7 @@ class CMACLegProsthesis(cmac.CMAC):
         confs = []
         data = None
         out_index = 1 
-        data_i = [0, 3, 6,7,8, 9, 10, 11]
+        data_i = [6,7,8, 9, 10, 11]
         for i in data_i: 
             desc = loader.data_descs[i]
             new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, 10)
@@ -84,11 +84,18 @@ class CMACLegProsthesis(cmac.CMAC):
     def plot_test(self):
         plt.figure()
         plt.plot(self.t.E)
+        
+        t = arange(0, self._data_out_test.shape[0]) *(2.*(1./315.) )
         test_result = self.fire_test()
+        
+        
         plt.figure()
         plt.hold(True)
-        plt.plot(self._data_out_test.tolist(), 'b')
-        plt.plot(test_result, 'r')
+        p1 = plt.plot(t.tolist(), self._data_out_test.tolist(), 'b', linewidth=4)
+        p2 = plt.plot(t.tolist(), test_result, 'r', linewidth=2)
+        plt.xlabel('t (segundos)', fontsize=15)
+        plt.ylabel('Velocidades angulares (rads/seg)', fontsize=15)
+        plt.legend(['Joelho humano', 'MISO CMAC'])
         plt.show()
 
 def main():
