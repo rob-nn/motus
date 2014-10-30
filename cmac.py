@@ -76,7 +76,11 @@ class CMAC(object):
                 return i-1 
 
     def fire(self, input_vector):
-        return self.recode(input_vector)
+        recode_vector = self.recode(input_vector)
+        p = 0
+        for address in recode_vector:
+            p = p + self.weight_table[address]    
+        return p
             
     @property
     def weight_table(self):
