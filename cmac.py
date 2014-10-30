@@ -12,10 +12,6 @@ class CMAC(object):
         self._set_sensory_mappings()
         random.seed()
 
-    def generate_tables(self):
-        self.make_hyperplane()
-        self.make_weight_table()
-
     def _set_sensory_mappings(self):
         for sensory_config in self._sensory_configs:
             sensory_config.cmac = self
@@ -25,124 +21,14 @@ class CMAC(object):
             self._num_dig.append(self._num_dig[-1]+ int(floor(log10(conf.mapping.max())+1)))
         self._num_dig = 10**array(self._num_dig)
 
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
-
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
-
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
-
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
-
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
-
-    def make_hyperplane(self):
-        l = None
-        for dim in self.sensory_cell_configs:
-            l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
-    def _append_dim(self, l, values):
-        if l == None:
-            l = reshape(values,(values.shape[0], 1, self.num_active_cells))
-            return l
-        new_list = [] 
-        for item in l:
-            for value in values:
-                new_item = item[:]
-                new_item = concatenate((new_item, reshape(value,(1, self.num_active_cells))), axis=0)
-                new_list.append(new_item)
-        return new_list
-
     def get_address(self, recode_vector):
         return dot(self._num_dig, recode_vector)
 
     def make_weight_table(self):
-        table = unique(array([self.get_address(item) for item in self.hyperplane]))
+        ndim = NDimensionalSpaceCMAC(self)
+        ndim.make_hyperplane()
+ 
+        table = unique(array([self.get_address(item) for item in ndim.hyperplane]))
         num = table.shape[0]
         table = concatenate((reshape(table, (num,1)), \
             random.uniform(-0.2, 0.2, (num,1))), axis=1)
@@ -216,8 +102,12 @@ class NDimensionalSpaceCMAC(object):
         return new_list
 
     @property
-        def cmac(self):
-            return._cmac
+    def cmac(self):
+        return self._cmac
+    
+    @property
+    def hyperplane(self):
+        return self._hyperplane
 
 class Train(object):
     def __init__(self, cmac, data_in, data_out, alpha, num_iterations):

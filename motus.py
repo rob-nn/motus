@@ -33,7 +33,7 @@ class CMACLegProsthesis(cmac.CMAC):
                 data = concatenate((data, new_data), axis = 1)
 
         super(CMACLegProsthesis, self).__init__(confs, 3)
-        self.generate_tables()
+        self.make_weight_table()
         data_out = None
         data_out_test = None
         data_in = None

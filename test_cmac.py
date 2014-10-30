@@ -71,12 +71,18 @@ class TestCmac(unittest.TestCase):
         self.assertTrue(self._sense_conf.mapping[11].tolist() == [12, 13, 14, 11])
         self.assertTrue(self._sense_conf.mapping[12].tolist() == [12, 13, 14, 15])
 
-    def test_make_hyperplane(self):
-	self._cmac.make_hyperplane()
-	self.assertTrue(len(self._cmac.hyperplane) == (13 *10*2))
-	self.assertTrue(all(self._cmac.hyperplane[0] == array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])))
-	self.assertTrue(all(self._cmac.hyperplane[-1] == array([[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])))
+    def test_hyperplane(self):
+	self._cmac
+        ndim = cmac.NDimensionalSpaceCMAC(self._cmac)
+        ndim.make_hyperplane()
+	self.assertTrue(len(ndim.hyperplane) == (13 *10*2))
+	self.assertTrue(all(ndim.hyperplane[0] == array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])))
+	self.assertTrue(all(ndim.hyperplane[-1] == array([[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])))
 	self._cmac.make_weight_table()
+
+    def test_weight_table(self):
+        self._cmac.make_weight_table()
+
 	self.assertTrue(max(self._cmac.weight_table.keys()) == 41212)
 	self.assertTrue(self._cmac.recode([12., 1., 1.])== [41212, 10913, 21014, 31115])
 	self.assertTrue(self._cmac.recode([0,0,0])== [0, 10101, 20202, 30303])
@@ -107,7 +113,7 @@ class TestLongRange(unittest.TestCase):
         self._cmac = cmac.CMAC(confs, 4)
 
     def testRun(self):
-        self._cmac.generate_tables()
+        self._cmac.make_weight_table()
 
 class TestTrain(unittest.TestCase):
     def setUp(self):
@@ -115,7 +121,7 @@ class TestTrain(unittest.TestCase):
         confs.append(cmac.SensoryCellConfig(-10., 10., 100))
         confs.append(cmac.SensoryCellConfig(-10., 10., 100))
         _cmac = cmac.CMAC(confs, 4)
-        _cmac.generate_tables()
+        _cmac.make_weight_table()
         data_in = None
         data_out = array([])
         for i in range(100):
