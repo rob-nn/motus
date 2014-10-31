@@ -15,7 +15,11 @@ def make_interface():
 	
 
 class CMACLegProsthesis(cmac.CMAC):
-    def __init__(self):
+    def __init__(self, \
+            desc='CMAC', \
+            activations=3, \
+            num_values = 10):
+
         loader = gait_loader.loadWalk3() 
         confs = []
         data = None
@@ -23,7 +27,7 @@ class CMACLegProsthesis(cmac.CMAC):
         data_i = [9, 10, 11]
         for i in data_i: 
             desc = loader.data_descs[i]
-            new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, 20)
+            new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, num_values)
             confs.append(new_sensory_config)
             column = loader.data[:,i]
             new_data = reshape(column, (len(column), 1))
@@ -32,7 +36,7 @@ class CMACLegProsthesis(cmac.CMAC):
             else:
                 data = concatenate((data, new_data), axis = 1)
 
-        super(CMACLegProsthesis, self).__init__(confs, 3)
+        super(CMACLegProsthesis, self).__init__(confs, activations)
         self.make_weight_table()
         data_out = None
         data_out_test = None
