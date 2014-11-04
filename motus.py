@@ -18,18 +18,21 @@ class CMACLegProsthesis(cmac.CMAC):
     def __init__(self, \
             desc='CMAC', \
             activations=3, \
-            num_values = 10):
+            configs= None):
+        if configs == None:
+            configs = [(9, 10),(10, 10),(11, 10)]
 
         loader = gait_loader.loadWalk3() 
         confs = []
         data = None
         out_index = 1 
-        data_i = [9, 10, 11]
-        for i in data_i: 
-            desc = loader.data_descs[i]
+        for conf in configs: 
+            index = conf[0]
+            num_values = conf[1]
+            desc = loader.data_descs[index]
             new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, num_values)
             confs.append(new_sensory_config)
-            column = loader.data[:,i]
+            column = loader.data[:, index]
             new_data = reshape(column, (len(column), 1))
             if data == None:
                 data = new_data
@@ -66,8 +69,8 @@ class CMACLegProsthesis(cmac.CMAC):
         self._loader = loader
         self._data_test = data_test
 
-    def train(self): 
-        t = cmac.Train(self, self._data_in, self._data_out, 1, 50)
+    def train(self, num_iterations = 50): 
+        t = cmac.Train(self, self._data_in, self._data_out, 1, num_iterations)
         t.train()
         self.t = t
     
@@ -112,3 +115,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+            

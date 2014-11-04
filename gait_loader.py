@@ -80,6 +80,10 @@ class DataDesc(object):
 	@property
 	def max_val(self):
 		return self._max_val
+
+        @property
+        def desc(self):
+            return self._desc
 	
 
 def loadWalk3():
