@@ -1,11 +1,12 @@
 from Tkinter import *
 import motus
 import gait_loader as ld
+
 class App(object):
     def __init__(self):
         self._root = Tk()
         #self._root.geometry('800x600')
-        self._commands = Commands()
+        self._commands = Commands(self)
         self._generate_menu_bar()
         self._create_top_frame()
         self._create_middle_frame()
@@ -21,7 +22,8 @@ class App(object):
         self.topframe = TopFrame(self)
 
     def _create_middle_frame(self):
-        self._config_table = MiddleFrame(self).config_table
+        self._middle_frame = MiddleFrame(self)
+        
 
     def _create_botton_frame(self):
         BottonFrame(self)
@@ -33,10 +35,9 @@ class App(object):
     @property
     def commands(self):
         return self._commands   
-
     @property
-    def config_table(self):
-        return self._config_table
+    def middle_frame(self):
+        return self._middle_frame
 
 class TopMenu(Menu):
     def __init__(self, app):
@@ -56,12 +57,33 @@ class MiddleFrame(Frame):
         self.pack(side=TOP, expand=True, fill=BOTH)
         Label(self, text= 'Parameters Configuration').pack(side=TOP, expand=True, fill=Y)
         labels = ['Description', 'Min value', 'Max value', 'Possible Numbers']
-        self._st = SimpleTable(self, labels)
-        self._st.pack(side=TOP, expand=True, fill=BOTH)
+        fp = Frame(self)
+        fp.pack(side=TOP, expand=True, fill=BOTH)
+        self.pack_parameters()
+
+    def pack_parameters(self):
+        loader = ld.loadWalk3()
+        descs = loader.data_descs
+        self._check_values = []
+        self._spins = []
+        Label(self, text='Select a parameter').pack(anchor=W)
+        for i in range(len(descs)):
+            f = Frame(self)
+            f.pack(expand=True, fill=BOTH)
+            self._check_values.append(IntVar())
+            c = Checkbutton(f, text=descs[i].desc, variable=self._check_values[i])
+            c.grid(row=i, column=0, sticky=W)
+            sv = Spinbox(f, from_=1, to= 200)
+            sv.grid(row=i, column=1, sticky=E)
+            self._spins.append(sv)
 
     @property
-    def config_table(self):
-        return self._st
+    def selections(self):
+        values = []
+        for i in range(len(self._check_values)):
+            if self._check_values[i].get() ==1:
+                values.append((int(i), int(self._spins[i].get())))            
+        return values
 
 class TopFrame(Frame):
     def __init__(self, app):
@@ -78,74 +100,29 @@ class TopFrame(Frame):
         Label(self, text = 'Num. Iterations').pack(side=LEFT)
         self.numiterations = Spinbox(self, from_=1, to=200)
         self.numiterations.pack(side=LEFT)
+
 class BottonFrame(Frame): 
     def __init__(self, app):
         Frame.__init__(self, app.root)
         self.pack(side= TOP, expand=True, fill=BOTH)
         Button(self, text='Run & Plot', \
-            command= (lambda: app.commands.run_plot( \
-            desc = app.topframe.desc.get(), \
-            activations = int(app.topframe.activations.get()),
-            configs = app.config_table.selections, \
-            num_iterations = int(app.topframe.numiterations.get())))).pack(side=LEFT)
-        new_parameter = None
-        Button(self, text="New Parameter", \
-            command=(lambda:(app.commands.add_parameter(app.root, app.config_table)))).pack(side=LEFT)
-
-class NewParameter:
-    def __init__(self, parent):
-        self._root = parent
-        self._top = Toplevel(parent)
-        loader = ld.loadWalk3()
-        self._value = None
-
-        Label(self.top, text='Select a parameter').pack(anchor=W)
-
-        data = loader.data_descs
-        self._v = IntVar()
-        self._entry_values = []
-        for i in range(len(data)):
-            f = Frame(self.top)
-            f.pack(expand=True, fill=BOTH)
-            b = Radiobutton(f, text = data[i].desc, variable = self._v,  value = data[i].index)
-            b.grid(row=i, column=0, sticky=W)
-            ev = Spinbox(f, from_=1,  to=200)
-            ev.grid(row=i, column=1, sticky=E)
-            self._entry_values.append(ev)
-
-        f = Frame(self.top)
-        f.pack(side=TOP, expand=True, fill=Y)
-        ok = Button(f, text='Ok', command=self.ok)
-        cancel = Button(f, text='Cancel', command=self.cancel)
-        ok.pack(side = LEFT) 
-        cancel.pack(side=RIGHT)
-
-    def ok(self):
-        self._value = (self._v, int(self._entry_values[self._v.get()].get()))
-        self.top.destroy()
-    
-    def cancel(self):
-        self._value = None        
-        self.top.destroy()
-
-    def show_return(self):
-        self._root.wait_window(self.top)
-        return self.value
-
-    @property
-    def top(self):
-        return self._top
-
-    @property
-    def value(self):
-        return self._value
+            command= app.commands.run_plot).pack(side=LEFT)
 
 class Commands(object):
+    def __init__(self, app):
+        self._app = app
+
+    @property
+    def app(self):
+        return self._app
+
     def new_project(self):
         pass
-    def run_plot(self, desc, activations, configs, num_iterations):
-        ann = motus.CMACLegProsthesis(desc, activations, configs)
-        ann.train(num_iterations = num_iterations)
+
+    def run_plot(self):
+        app = self.app
+        ann = motus.CMACLegProsthesis(app.topframe.desc.get(), int(app.topframe.activations.get()), app.middle_frame.selections)
+        ann.train(num_iterations = int(app.topframe.numiterations.get()))
         ann.plot_test()
 
     def add_parameter(self, root, table):
