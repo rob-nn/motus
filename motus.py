@@ -16,7 +16,7 @@ def make_interface():
 
 class Motus(cmac.CMAC):
     def __init__(self, \
-            desc=None, \
+            desc='Motus', \
             activations=3, \
             configs= None):
         if configs == None:
@@ -30,7 +30,7 @@ class Motus(cmac.CMAC):
             index = conf[0]
             num_values = conf[1]
             desc_conf = loader.data_descs[index]
-            new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, num_values, desc_conf)
+            new_sensory_config = cmac.SensoryCellConfig(desc_conf.min_val, desc_conf.max_val, num_values, desc_conf.desc)
             confs.append(new_sensory_config)
             column = loader.data[:, index]
             new_data = reshape(column, (len(column), 1))
@@ -74,13 +74,18 @@ class Motus(cmac.CMAC):
             raise ParameterInvalid('Invalid Description.')
         if activations == None or activations <=0:
             raise ParameterInvalid('Number of activations must be greater than zero')
+        if configs == None or (type(configs)==list and len(configs)==0):
+            raise ParameterInvalid('Select at least one parameter')
         for conf in configs:
             if conf[1] <= activations:
                 loader = gait_loader.loadWalk3() 
-                desc = loader.data_descs[conf[0]]
+                desc = loader.data_descs[conf[0]].desc
                 raise ParameterInvalid('The parameter %s must be greater than the number of activations' % desc)
+                break
 
     def train(self, num_iterations = 50): 
+        if num_iterations < 1:
+            raise ParameterInvalid('Number of iterations must be greater than 1')
         t = cmac.Train(self, self._data_in, self._data_out, 1, num_iterations)
         t.train()
         self.t = t
