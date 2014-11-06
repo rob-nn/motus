@@ -5,6 +5,7 @@ import gait_loader as ld
 class App(object):
     def __init__(self):
         self._root = Tk()
+        self._root.title('Motus')
         #self._root.geometry('800x600')
         self._commands = Commands(self)
         self._generate_menu_bar()
@@ -51,40 +52,6 @@ class TopMenu(Menu):
         file_menu.add_separator()
         file_menu.add_command(label='Quit', command=app.root.quit)
 
-class MiddleFrame(Frame):
-    def __init__(self, app):
-        Frame.__init__(self, app.root)
-        self.pack(side=TOP, expand=True, fill=BOTH)
-        Label(self, text= 'Parameters Configuration').pack(side=TOP, expand=True, fill=Y)
-        labels = ['Description', 'Min value', 'Max value', 'Possible Numbers']
-        fp = Frame(self)
-        fp.pack(side=TOP, expand=True, fill=BOTH)
-        self.pack_parameters()
-
-    def pack_parameters(self):
-        loader = ld.loadWalk3()
-        descs = loader.data_descs
-        self._check_values = []
-        self._spins = []
-        Label(self, text='Select a parameter').pack(anchor=W)
-        for i in range(len(descs)):
-            f = Frame(self)
-            f.pack(expand=True, fill=BOTH)
-            self._check_values.append(IntVar())
-            c = Checkbutton(f, text=descs[i].desc, variable=self._check_values[i])
-            c.grid(row=i, column=0, sticky=W)
-            sv = Spinbox(f, from_=1, to= 200)
-            sv.grid(row=i, column=1, sticky=E)
-            self._spins.append(sv)
-
-    @property
-    def selections(self):
-        values = []
-        for i in range(len(self._check_values)):
-            if self._check_values[i].get() ==1:
-                values.append((int(i), int(self._spins[i].get())))            
-        return values
-
 class TopFrame(Frame):
     def __init__(self, app):
         Frame.__init__(self, app.root)
@@ -100,6 +67,36 @@ class TopFrame(Frame):
         Label(self, text = 'Num. Iterations').pack(side=LEFT)
         self.numiterations = Spinbox(self, from_=1, to=200)
         self.numiterations.pack(side=LEFT)
+
+class MiddleFrame(Frame):
+    def __init__(self, app):
+        Frame.__init__(self, app.root)
+        self.pack(side=TOP, expand=True, fill=BOTH)
+        Label(self, text= 'Parameters Configuration', font=('Helvetica', '16', 'bold')).pack(side=TOP, expand=True, fill=Y)
+        self.pack_parameters()
+
+    def pack_parameters(self):
+        loader = ld.loadWalk3()
+        descs = loader.data_descs
+        self._check_values = []
+        self._spins = []
+        f = Frame(self, bd=1, relief=SUNKEN)
+        f.pack(expand=True, fill=BOTH)
+        for i in range(len(descs)):
+            self._check_values.append(IntVar())
+            c = Checkbutton(f, text=descs[i].desc, variable=self._check_values[i])
+            c.grid(row=i, column=0, sticky=W)
+            sv = Spinbox(f, from_=1, to= 200)
+            sv.grid(row=i, column=1, sticky=E)
+            self._spins.append(sv)
+
+    @property
+    def selections(self):
+        values = []
+        for i in range(len(self._check_values)):
+            if self._check_values[i].get() ==1:
+                values.append((int(i), int(self._spins[i].get())))            
+        return values
 
 class BottonFrame(Frame): 
     def __init__(self, app):
@@ -121,7 +118,7 @@ class Commands(object):
 
     def run_plot(self):
         app = self.app
-        ann = motus.CMACLegProsthesis(app.topframe.desc.get(), int(app.topframe.activations.get()), app.middle_frame.selections)
+        ann = motus.Motus(app.topframe.desc.get(), int(app.topframe.activations.get()), app.middle_frame.selections)
         ann.train(num_iterations = int(app.topframe.numiterations.get()))
         ann.plot_test()
 

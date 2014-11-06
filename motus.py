@@ -14,14 +14,14 @@ def make_interface():
 	root.mainloop()
 	
 
-class CMACLegProsthesis(cmac.CMAC):
+class Motus(cmac.CMAC):
     def __init__(self, \
-            desc='CMAC', \
+            desc=None, \
             activations=3, \
             configs= None):
         if configs == None:
             configs = [(9, 10),(10, 10),(11, 10)]
-
+        self.validate_parameters(desc, activations, configs)
         loader = gait_loader.loadWalk3() 
         confs = []
         data = None
@@ -29,8 +29,8 @@ class CMACLegProsthesis(cmac.CMAC):
         for conf in configs: 
             index = conf[0]
             num_values = conf[1]
-            desc = loader.data_descs[index]
-            new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, num_values)
+            desc_conf = loader.data_descs[index]
+            new_sensory_config = cmac.SensoryCellConfig(desc.min_val, desc.max_val, num_values, desc_conf)
             confs.append(new_sensory_config)
             column = loader.data[:, index]
             new_data = reshape(column, (len(column), 1))
@@ -39,7 +39,7 @@ class CMACLegProsthesis(cmac.CMAC):
             else:
                 data = concatenate((data, new_data), axis = 1)
 
-        super(CMACLegProsthesis, self).__init__(confs, activations)
+        super(Motus, self).__init__(confs, activations)
         self.make_weight_table()
         data_out = None
         data_out_test = None
@@ -68,6 +68,17 @@ class CMACLegProsthesis(cmac.CMAC):
         self._data_in = data_in
         self._loader = loader
         self._data_test = data_test
+    
+    def validate_parameters(self, desc, activations, configs):
+        if desc == None or desc.strip() =='':
+            raise ParameterInvalid('Invalid Description.')
+        if activations == None or activations <=0:
+            raise ParameterInvalid('Number of activations must be greater than zero')
+        for conf in configs:
+            if conf[1] <= activations:
+                loader = gait_loader.loadWalk3() 
+                desc = loader.data_descs[conf[0]]
+                raise ParameterInvalid('The parameter %s must be greater than the number of activations' % desc)
 
     def train(self, num_iterations = 50): 
         t = cmac.Train(self, self._data_in, self._data_out, 1, num_iterations)
@@ -105,8 +116,16 @@ class CMACLegProsthesis(cmac.CMAC):
         plt.legend(['Joelho humano', 'MISO CMAC'])
         plt.show()
 
+class ParameterInvalid(BaseException):
+    def __init__(self, description):
+        self._description = description
+
+    @property
+    def description(self):
+        return self._description
+
 def main():
-    cmac = CMACLegProsthesis()
+    cmac = Motus(desc='motus')
     #cmac.plot_data()
     cmac.train()
     cmac.plot_test()

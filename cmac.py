@@ -148,11 +148,12 @@ class Train(object):
         return self._cmac
 
 class SensoryCellConfig(object):
-    def __init__(self, s_min, s_max, num_possible_values):
+    def __init__(self, s_min, s_max, num_possible_values, desc=None):
         self._s_min = s_min
         self._s_max = s_max
         self._num_possible_values = num_possible_values
         self._cmac = None
+        self._desc = desc
 
     def set_mapping(self):
         self._set_mapping_address()
@@ -214,3 +215,6 @@ class SensoryCellConfig(object):
     @property
     def s_max(self):
         return self._s_max
+    @property
+    def desc(self):
+        return self._desc
