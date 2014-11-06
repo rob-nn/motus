@@ -6,6 +6,8 @@ import gait_loader as ld
 
 class App(object):
     def __init__(self):
+        self._label_output = None
+        self.output = ()
         self._root = Tk()
         self._root.title('Motus')
         #self._root.geometry('800x600')
@@ -35,6 +37,8 @@ class App(object):
         self.topframe.clear()
         self.middle_frame.clear()
         self._commands.filename = None
+        self.output = ()
+        self.label_out.config(text='')
 
     @property
     def root(self):
@@ -47,6 +51,13 @@ class App(object):
     def middle_frame(self):
         return self._middle_frame
 
+    @property
+    def label_out(self):
+        return self._label_output
+    
+    @label_out.setter
+    def label_out(self, value):
+        self._label_output = value
 
 class TopMenu(Menu):
     def __init__(self, app):
@@ -64,18 +75,34 @@ class TopMenu(Menu):
 class TopFrame(Frame):
     def __init__(self, app):
         Frame.__init__(self, app.root)
+        self._app = app
         self.pack(side=TOP, expand=True, fill=BOTH)
-        Label(self, text = 'Description').pack(side=LEFT)
+
+        Label(self, text = 'Description').grid(row=0, column=0)
         self.desc = Entry(self)
-        self.desc.pack(side=LEFT)
+        self.desc.grid(row=0, column=1)
 
-        Label(self, text = 'Activations').pack(side=LEFT)
+        Label(self, text = 'Activations').grid(row=1, column=0)
         self.activations = Spinbox(self, from_=1, to=30)
-        self.activations.pack(side=LEFT)
+        self.activations.grid(row=1, column=1)
 
-        Label(self, text = 'Num. Iterations').pack(side=LEFT)
+        Label(self, text = 'Num. Iterations').grid(row=0, column=3)
         self.numiterations = Spinbox(self, from_=1, to=200)
-        self.numiterations.pack(side=LEFT)
+        self.numiterations.grid(row=0, column=4)
+
+        frame = Frame(self)
+        frame.grid(row=1, column=3)
+        Label(frame, text='Output').pack(side=LEFT)
+        Button(frame, text="Change", command=self._select_output).pack(side=LEFT)
+        
+        self._app.label_out = Label(self)
+        self._app.label_out.grid(row=1, column=4)
+        if len(self._app.output)>1:
+            self._app.label_out.config(text= self._app.output[1])
+    
+    def _select_output(self):
+        SelectOutput(self._app)
+        
 
     def clear(self):
         vdesc = StringVar()
@@ -171,6 +198,8 @@ class Commands(object):
         f.write(self.app.topframe.desc.get() + '\n')
         f.write(self.app.topframe.activations.get() + '\n')
         f.write(self.app.topframe.numiterations.get() + '\n')
+        out = self.app.output
+        f.write(str(out[0]) + ' ' + str(out[1]) + '\n')
         for item in self.app.middle_frame.selections:   
             f.write(str(item[0]) + ' ' + str(item[1]) + '\n')
         f.close()
@@ -190,6 +219,9 @@ class Commands(object):
             iterations = StringVar()
             iterations.set(f.readline().strip())
             self.app.topframe.numiterations.configure(textvariable=iterations)
+            output = f.readline().split()
+            self.app.output=(output[0], output[1])
+            self.app.label_out.config(text= output[1])
             for item in f:
                 values = item.split()
                 self.app.middle_frame.check_values[int(values[0])].set(True)
@@ -203,7 +235,9 @@ class Commands(object):
 
     def run_plot(self):
         try:
-            ann = motus.Motus(self.app.topframe.desc.get(), int(self.app.topframe.activations.get()), self.app.middle_frame.selections)
+            if len(self.app.output) ==0:
+                raise motus.ParameterInvalid('Inform the output parameter')
+            ann = motus.Motus(self.app.topframe.desc.get(), int(self.app.topframe.activations.get()), self.app.middle_frame.selections, self.app.output[0])
             ann.train(num_iterations = int(self.app.topframe.numiterations.get()))
         except motus.ParameterInvalid as invalid:
             tkMessageBox.showerror(title= 'Invalid parameter', message= invalid.description, icon=tkMessageBox.ERROR)
@@ -216,39 +250,32 @@ class Commands(object):
         if value != None:
             table.add(value)         
 
-# inspired be http://stackoverflow.com/questions/11047803/creating-a-table-look-a-like-tkinter
-# by Bryan Oakley
-class SimpleTable(Frame):
-    def __init__(self, parent,  labels):
-        Frame.__init__(self, parent)
-        for column in range(len(labels)):
-            label = Label(self, text=labels[column])
-            label.grid(row=0, column=column)
-        self._selections = []
+class SelectOutput():
+    def __init__(self, app):
+        self._app = app
+        self._window = Toplevel(app.root)
+        self._value = IntVar(self._window)
+        loader = ld.loadWalk3()
+        self._descs = []
+        for desc in loader.data_descs:
+            self._descs.append(desc.desc)
+            option = Radiobutton(self._window, variable=self._value, value=desc.index, text=desc.desc)
+            option.pack(anchor=NW)
+        frame = Frame(self._window)
+        frame.pack(side=TOP)
+        Button(frame, text='Ok', command=self._ok).pack(side=LEFT)
+        Button(frame, text='Cancel', command=self._window.destroy).pack(side=RIGHT)
+        if len(app.output) >0:
+            self._value.set(app.output[0])
+        #self._window.transient(app.root)
+        self._window.grab_set()
+        app.root.wait_window(self._window)
 
-    def add(self, selection):
-        index = selection[0].get()
-        num_values = selection[1]
+    def _ok(self):
+        self._app.output = (self._value.get(), self._descs[int(self._value.get())])
+        self._app.label_out.config(text=self._app.output[1])
+        self._window.destroy()
 
-        data = ld.loadWalk3().data_descs[index]
-
-        row = self.grid_size()[1] + 1
-
-        label=Label(self, text=data.desc)
-        label.grid(row=row, column=0)
-        label=Label(self, text=data.min_val)
-        label.grid(row=row, column=1)
-        label=Label(self, text=data.max_val)
-        label.grid(row=row, column=2)
-        label=Label(self, text=num_values)
-        label.grid(row=row, column=3)
-
-        self._selections.append((index, num_values))
-
-    @property
-    def selections(self):
-        return self._selections 
-            
 def main():
     app = App()
     app.run()

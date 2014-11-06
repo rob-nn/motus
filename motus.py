@@ -18,14 +18,14 @@ class Motus(cmac.CMAC):
     def __init__(self, \
             desc='Motus', \
             activations=3, \
-            configs= None):
+            configs= None, \
+            out_index = 1):
         if configs == None:
             configs = [(9, 10),(10, 10),(11, 10)]
-        self.validate_parameters(desc, activations, configs)
+        self.validate_parameters(desc, activations, configs, out_index)
         loader = gait_loader.loadWalk3() 
         confs = []
         data = None
-        out_index = 1 
         for conf in configs: 
             index = conf[0]
             num_values = conf[1]
@@ -69,7 +69,7 @@ class Motus(cmac.CMAC):
         self._loader = loader
         self._data_test = data_test
     
-    def validate_parameters(self, desc, activations, configs):
+    def validate_parameters(self, desc, activations, configs, out_index):
         if desc == None or desc.strip() =='':
             raise ParameterInvalid('Invalid Description.')
         if activations == None or activations <=0:
@@ -82,6 +82,8 @@ class Motus(cmac.CMAC):
                 desc = loader.data_descs[conf[0]].desc
                 raise ParameterInvalid('The parameter %s must be greater than the number of activations' % desc)
                 break
+        if out_index == None:
+            raise ParameterInvalid("Output parameter didn't inform")
 
     def train(self, num_iterations = 50): 
         if num_iterations < 1:
@@ -120,6 +122,8 @@ class Motus(cmac.CMAC):
         plt.ylabel('Velocidades angulares (rads/seg)', fontsize=15)
         plt.legend(['Joelho humano', 'MISO CMAC'])
         plt.show()
+
+
 
 class ParameterInvalid(BaseException):
     def __init__(self, description):
