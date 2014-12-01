@@ -4,15 +4,6 @@ import gait_loader
 from numpy import *
 import matplotlib.pyplot as plt
 
-def train():
-	x = 1+1
-
-def make_interface():
-	root = Tk()
-	root.title = 'motus'
-	Button(root, text='Train', command=train).pack()
-	root.mainloop()
-	
 
 class Motus(cmac.CMAC):
     def __init__(self, \
