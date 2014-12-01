@@ -129,7 +129,6 @@ class Train(object):
                     self.cmac.weight_table[recode] = self.cmac.weight_table[recode] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
 		    err = err+ ((self.data_out[i] - out)**2)/2
 	    self.E.append(err)
-	    if iteration % 10 == 0: print iteration
            
     @property 
     def alpha(self):

@@ -21,7 +21,7 @@ class Motus(cmac.CMAC):
             configs= None, \
             out_index = 1):
         if configs == None:
-            configs = [(9, 10),(10, 10),(11, 10)]
+            configs = [(9, 15),(10, 15),(11, 15)]
         self.validate_parameters(desc, activations, configs, out_index)
         loader = gait_loader.loadWalk3() 
         confs = []
@@ -137,7 +137,7 @@ def main():
     cmac = Motus(desc='motus')
     #cmac.plot_data()
     cmac.train()
-    cmac.plot_test()
+    #cmac.plot_test()
     return cmac
 
 

@@ -3,6 +3,7 @@ import tkMessageBox
 import tkFileDialog
 import motus
 import gait_loader as ld
+import os
 
 class App(object):
     def __init__(self):
@@ -173,7 +174,7 @@ class Commands(object):
         self.file_opt = options = {}
         options['defaultextension'] = '.mts'
         options['filetypes'] = [('motus files', '.mts')]
-        options['initialdir'] = '~'
+        options['initialdir'] = os.getcwd() 
         options['parent'] = app.root
         options['title'] = 'Save a motus project file'
         self.filename = None
