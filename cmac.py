@@ -1,8 +1,4 @@
 from numpy import *
-from gait_loader import *
-import math
-import gait_loader
-import matplotlib.pyplot as plt
 
 class CMAC(object):
 

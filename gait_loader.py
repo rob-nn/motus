@@ -8,9 +8,9 @@ class DataLoader(object):
 		self._generate_data_descs()
 
 	def _load_data(self):
-		file = open(self._file_name)
-		data = file.readlines()
-		file.close()
+		f = open(self._file_name)
+		data = f.readlines()
+		f.close()
 		j = 0
 		data_list = []
 		for i in range(len(data)):

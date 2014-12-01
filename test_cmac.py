@@ -72,7 +72,6 @@ class TestCmac(unittest.TestCase):
         self.assertTrue(self._sense_conf.mapping[12].tolist() == [12, 13, 14, 15])
 
     def test_hyperplane(self):
-	self._cmac
         ndim = cmac.NDimensionalSpaceCMAC(self._cmac)
         ndim.make_hyperplane()
 	self.assertTrue(len(ndim.hyperplane) == (13 *10*2))

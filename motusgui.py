@@ -244,13 +244,6 @@ class Commands(object):
             tkMessageBox.showerror(title= 'Invalid parameter', message= invalid.description, icon=tkMessageBox.ERROR)
         ann.plot_test()
 
-    def add_parameter(self, root, table):
-        d = NewParameter(root)
-        value = d.show_return()
-        d.top.destroy()
-        if value != None:
-            table.add(value)         
-
 class SelectOutput():
     def __init__(self, app):
         self._app = app

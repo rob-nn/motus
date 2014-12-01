@@ -7,7 +7,6 @@ def basic_cmac():
     confs.append(cmac.SensoryCellConfig(0., 1., 50))
     confs.append(cmac.SensoryCellConfig(0., 1., 50))
     _cmac = cmac.CMAC(confs, 4)
-    _cmac.generate_tables()
     return _cmac
 
 
