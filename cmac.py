@@ -1,61 +1,58 @@
 from numpy import *
 
 class CMAC(object):
-
-    def __init__(self, sensory_configs, num_active_cells):
+    def __init__(self, signal_configurations, num_active_cells):
         self._num_active_cells = num_active_cells
-        self._sensory_configs = sensory_configs
-        self._set_sensory_mappings()
+        self._signal_configurations = signal_configurations
+        self._set_signal_mappings()
         random.seed()
 
-    def _set_sensory_mappings(self):
-        for sensory_config in self._sensory_configs:
-            sensory_config.cmac = self
-            sensory_config.set_mapping()
+    def _set_signal_mappings(self):
+        for signal_configuration in self._signal_configurations:
+            signal_configuration.cmac = self
+            signal_configuration.set_signal_mapping()
         self._num_dig = [0]
-        for conf in self.sensory_cell_configs[0:-1]:
+        for conf in self.signal_configuration[0:-1]:
             self._num_dig.append(self._num_dig[-1]+ int(floor(log10(conf.mapping.max())+1)))
         self._num_dig = 10**array(self._num_dig)
 
-    def get_address(self, recode_vector):
-        return dot(self._num_dig, recode_vector)
+    def calculate_address(self, adress_vector):
+        return dot(self._num_dig, adress_vector)
 
-    def make_weight_table(self):
-        ndim = NDimensionalSpaceCMAC(self)
-        ndim.make_hyperplane()
+    def make_weight_dictionary(self):
+        ndim = WeightsDictionaryFactory(self)
+        self._table = ndim.make_weights_dict()
  
-        table = unique(array([self.get_address(item) for item in ndim.hyperplane]))
-        num = table.shape[0]
-        table = concatenate((reshape(table, (num,1)), \
-            random.uniform(-0.2, 0.2, (num,1))), axis=1)
-        self._table = dict(table)
-        
-    def recode(self, input_vector):
-        recode_vector = []
-        sens_values = []
-        for i in range(len(self.sensory_cell_configs)):
-            index = self.get_index(input_vector[i], self.sensory_cell_configs[i])
-            sens_values.append(self.sensory_cell_configs[i].mapping[index])
-        sens_values = array(sens_values, dtype=int64)
+    def calculate_activation_adresses(self, input_signals_vector):
+        signals_mapping_values = self._get_signals_mapping_values(input_signals_vector)
+        calculated_adresses_vector = []
         for i in range(self.num_active_cells):
-            temp = sens_values[:, i].tolist()
-            address = self.get_address(temp)
-            recode_vector.append(address)
-        return recode_vector
+            temp = signals_mapping_values[:, i].tolist() #signal concatenation
+            address = self.calculate_address(temp)
+            calculated_adresses_vector.append(address)
+        return calculated_adresses_vector
     
-    def get_index(self, value, config):
+    def _get_signals_mapping_values(self, input_signal_vector):
+        signals_mapping_values = []
+        for i in range(len(self.signal_configuration)):
+            index = self.get_discretized_value_index(input_signal_vector[i], self.signal_configuration[i])
+            signals_mapping_values.append(self.signal_configuration[i].mapping[index])
+        return array(signals_mapping_values, dtype=int64)
+ 
+    
+    def get_discretized_value_index(self, value, config):
         if value <= config.s_min:
             return 0;
         if value >= config.s_max:
-            return len(config.mapping_address) -1
-        for i in range(len(config.mapping_address)):
-            if config.mapping_address[i] > value:
+            return len(config.discret_values) -1
+        for i in range(len(config.discret_values)):
+            if config.discret_values[i] > value:
                 return i-1 
 
-    def fire(self, input_vector):
-        recode_vector = self.recode(input_vector)
+    def fire(self, input_signal_vector):
+        calculated_address_vector = self.calculate_activation_adresses(input_signal_vector)
         p = 0
-        for address in recode_vector:
+        for address in calculated_address_vector:
             p = p + self.weight_table[address]    
         return p
             
@@ -67,24 +64,31 @@ class CMAC(object):
         return self._num_active_cells
 
     @property
-    def sensory_cell_configs(self):
-        return self._sensory_configs
+    def signal_configuration(self):
+        return self._signal_configurations
     
     @property
     def hyperplane(self):
         return self._hyperplane
 
-class NDimensionalSpaceCMAC(object):
+class WeightsDictionaryFactory(object):
     
     def __init__(self, cmac):
         self._cmac = cmac
+        self._calculated_addresses = None
 
-    def make_hyperplane(self):
+    def make_weights_dict(self):
         l = None
-        for dim in self.cmac.sensory_cell_configs:
+        for dim in self.cmac.signal_configuration:
             l = self._append_dim(l, dim.mapping)
-        self._hyperplane = array(l, dtype=int64)
-
+        self._calculated_adresses = array(l, dtype=int64)
+ 
+        table = unique(array([self.cmac.calculate_address(item) for item in self._calculated_adresses]))
+        num = table.shape[0]
+        table = concatenate((reshape(table, (num,1)), \
+            random.uniform(-0.2, 0.2, (num,1))), axis=1)
+        return dict(table)
+  
     def _append_dim(self, l, values):
         if l == None:
             l = reshape(values,(values.shape[0], 1, self.cmac.num_active_cells))
@@ -102,8 +106,8 @@ class NDimensionalSpaceCMAC(object):
         return self._cmac
     
     @property
-    def hyperplane(self):
-        return self._hyperplane
+    def calculated_adresses(self):
+        return self._calculated_adresses
 
 class Train(object):
     def __init__(self, cmac, data_in, data_out, alpha, num_iterations):
@@ -118,11 +122,10 @@ class Train(object):
         for iteration in range(self._num_iterations):
 	    err =0
             for i in range(len(self.data_in)):
-                input_vector = self.data_in[i, :].tolist()
-                out = self.cmac.fire(input_vector)
-                recode_vector = self.cmac.recode(input_vector)
-                for recode in recode_vector:
-                    self.cmac.weight_table[recode] = self.cmac.weight_table[recode] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
+                input_signal_vector = self.data_in[i, :].tolist()
+                out = self.cmac.fire(input_signal_vector)
+                for calculated_adress in self.cmac.calculate_activation_adresses(input_signal_vector):
+                    self.cmac.weight_table[calculated_adress] = self.cmac.weight_table[calculated_adress] + self.alpha * (self.data_out[i] -out) / self.cmac.num_active_cells
 		    err = err+ ((self.data_out[i] - out)**2)/2
 	    self.E.append(err)
            
@@ -142,16 +145,16 @@ class Train(object):
     def cmac(self):
         return self._cmac
 
-class SensoryCellConfig(object):
-    def __init__(self, s_min, s_max, num_possible_values, desc=None):
+class SignalConfiguration(object):
+    def __init__(self, s_min, s_max, num_discret_values, desc=None):
         self._s_min = s_min
         self._s_max = s_max
-        self._num_possible_values = num_possible_values
+        self._num_discret_values = num_discret_values
         self._cmac = None
         self._desc = desc
 
-    def set_mapping(self):
-        self._set_mapping_address()
+    def set_signal_mapping(self):
+        self._set_discret_values()
         temp_map = []
         i = 0
         qtd = 0
@@ -164,7 +167,7 @@ class SensoryCellConfig(object):
                     line.append(k)
                 temp.append(line)
                 qtd = qtd + 1
-                if qtd == self.num_possible_values:
+                if qtd == self.num_discret_values:
                     stop = True
                     break 
             for l in range(len(temp)):
@@ -182,10 +185,10 @@ class SensoryCellConfig(object):
             temp_map.extend(temp)    
             if stop: break
             i = i + self.num_active_cells 
-        self._mapping = array(temp_map)
+        self._signal_mapping = array(temp_map)
 
-    def _set_mapping_address(self):
-        self._mapping_address = linspace(self._s_min, self._s_max, self._num_possible_values)
+    def _set_discret_values(self):
+        self._discret_values = linspace(self._s_min, self._s_max, self._num_discret_values)
     @property
     def cmac(self):
         return self._cmac
@@ -194,16 +197,16 @@ class SensoryCellConfig(object):
         self._cmac = value
     @property
     def mapping(self):
-        return self._mapping
+        return self._signal_mapping
     @property
-    def mapping_address(self):
-        return self._mapping_address
+    def discret_values(self):
+        return self._discret_values
     @property
     def num_active_cells(self):
         return self._cmac.num_active_cells
     @property
-    def num_possible_values(self):
-        return self._num_possible_values
+    def num_discret_values(self):
+        return self._num_discret_values
     @property
     def s_min(self):
         return self._s_min

@@ -21,7 +21,7 @@ class Motus(cmac.CMAC):
             index = conf[0]
             num_values = conf[1]
             desc_conf = loader.data_descs[index]
-            new_sensory_config = cmac.SensoryCellConfig(desc_conf.min_val, desc_conf.max_val, num_values, desc_conf.desc)
+            new_sensory_config = cmac.SignalConfiguration(desc_conf.min_val, desc_conf.max_val, num_values, desc_conf.desc)
             confs.append(new_sensory_config)
             column = loader.data[:, index]
             new_data = reshape(column, (len(column), 1))
@@ -31,7 +31,7 @@ class Motus(cmac.CMAC):
                 data = concatenate((data, new_data), axis = 1)
 
         super(Motus, self).__init__(confs, activations)
-        self.make_weight_table()
+        self.make_weight_dictionary()
         data_out = None
         data_out_test = None
         data_in = None
@@ -74,7 +74,7 @@ class Motus(cmac.CMAC):
                 raise ParameterInvalid('The parameter %s must be greater than the number of activations' % desc)
                 break
         if out_index == None:
-            raise ParameterInvalid("Output parameter didn't inform")
+            raise ParameterInvalid("Output parameter didn't informed")
 
     def train(self, num_iterations = 50): 
         if num_iterations < 1:

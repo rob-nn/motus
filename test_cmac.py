@@ -6,9 +6,9 @@ import random
 class TestCmac(unittest.TestCase):
 
     def setUp(self):
-        self._sense_conf = cmac.SensoryCellConfig(0., 12., 13)
-        self._sense_conf_2 = cmac.SensoryCellConfig(0.1, 1., 10)
-        self._sense_conf_3 = cmac.SensoryCellConfig(-1, 1., 2)
+        self._sense_conf = cmac.SignalConfiguration(0., 12., 13)
+        self._sense_conf_2 = cmac.SignalConfiguration(0.1, 1., 10)
+        self._sense_conf_3 = cmac.SignalConfiguration(-1, 1., 2)
         confs = []
         confs.append(self._sense_conf)
         confs.append(self._sense_conf_2)
@@ -18,30 +18,30 @@ class TestCmac(unittest.TestCase):
     def tearDown(self):
         self._sense_conf = None
 
-    def test_mapping_address_first_value(self):
-        self.assertTrue(self._sense_conf.mapping_address[0] == self._sense_conf.s_min)
+    def test_discret_values_first_value(self):
+        self.assertTrue(self._sense_conf.discret_values[0] == self._sense_conf.s_min)
 
-    def test_mapping_address_last_value(self):
-        self.assertTrue(self._sense_conf.mapping_address[-1] == self._sense_conf.s_max)
+    def test_discret_values_last_value(self):
+        self.assertTrue(self._sense_conf.discret_values[-1] == self._sense_conf.s_max)
    
-    def test_mapping_address_size(self):
-    	self.assertTrue(len(self._sense_conf.mapping_address) == 13)
+    def test_discret_values_size(self):
+    	self.assertTrue(len(self._sense_conf.discret_values) == 13)
 
-    def test_mapping_address_all(self):
+    def test_discret_values_all(self):
 	self.assertTrue( \
-		(around(self._sense_conf.mapping_address,0) == \
+		(around(self._sense_conf.discret_values,0) == \
 		around(array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.]),0)).all())
 	self.assertTrue( \
-		(around(self._sense_conf_2.mapping_address.tolist(), 1) == \
+		(around(self._sense_conf_2.discret_values.tolist(), 1) == \
 		around([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.], 1)).all())
-    def test_get_index(self):
-	self.assertTrue(self._cmac.get_index(0.25, self._sense_conf_2) == 1)
-	self.assertTrue(self._cmac.get_index(1., self._sense_conf_2) == 9)
-	self.assertTrue(self._cmac.get_index(5, self._sense_conf_2) == 9)
-	self.assertTrue(self._cmac.get_index(0.1, self._sense_conf_2) == 0)
-	self.assertTrue(self._cmac.get_index(0, self._sense_conf_2) == 0)
-	self.assertTrue(self._cmac.get_index(0.95, self._sense_conf_2) == 8)
-	self.assertTrue(self._cmac.get_index(0.4, self._sense_conf_2) == 3)
+    def test_get_discretized_value_index(self):
+	self.assertTrue(self._cmac.get_discretized_value_index(0.25, self._sense_conf_2) == 1)
+	self.assertTrue(self._cmac.get_discretized_value_index(1., self._sense_conf_2) == 9)
+	self.assertTrue(self._cmac.get_discretized_value_index(5, self._sense_conf_2) == 9)
+	self.assertTrue(self._cmac.get_discretized_value_index(0.1, self._sense_conf_2) == 0)
+	self.assertTrue(self._cmac.get_discretized_value_index(0, self._sense_conf_2) == 0)
+	self.assertTrue(self._cmac.get_discretized_value_index(0.95, self._sense_conf_2) == 8)
+	self.assertTrue(self._cmac.get_discretized_value_index(0.4, self._sense_conf_2) == 3)
 
 
     def test_mapping_lines_sens_conf2(self):
@@ -71,21 +71,21 @@ class TestCmac(unittest.TestCase):
         self.assertTrue(self._sense_conf.mapping[11].tolist() == [12, 13, 14, 11])
         self.assertTrue(self._sense_conf.mapping[12].tolist() == [12, 13, 14, 15])
 
-    def test_hyperplane(self):
-        ndim = cmac.NDimensionalSpaceCMAC(self._cmac)
-        ndim.make_hyperplane()
-	self.assertTrue(len(ndim.hyperplane) == (13 *10*2))
-	self.assertTrue(all(ndim.hyperplane[0] == array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])))
-	self.assertTrue(all(ndim.hyperplane[-1] == array([[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])))
-	self._cmac.make_weight_table()
+    def test_calculated_adresses(self):
+        ndim = cmac.WeightsDictionaryFactory(self._cmac)
+        ndim.make_weights_dict()
+	self.assertTrue(len(ndim.calculated_adresses) == (13 *10*2))
+	self.assertTrue(all(ndim.calculated_adresses[0] == array([[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]])))
+	self.assertTrue(all(ndim.calculated_adresses[-1] == array([[12, 13, 14, 15], [12, 9, 10, 11], [4, 1, 2, 3]])))
+	self._cmac.make_weight_dictionary()
 
     def test_weight_table(self):
-        self._cmac.make_weight_table()
+        self._cmac.make_weight_dictionary()
 
 	self.assertTrue(max(self._cmac.weight_table.keys()) == 41212)
-	self.assertTrue(self._cmac.recode([12., 1., 1.])== [41212, 10913, 21014, 31115])
-	self.assertTrue(self._cmac.recode([0,0,0])== [0, 10101, 20202, 30303])
-	self.assertTrue(self._cmac.recode([5.25, 0.37, -0.2])== [408, 10505, 20206, 30307])
+	self.assertTrue(self._cmac.calculate_activation_adresses([12., 1., 1.])== [41212, 10913, 21014, 31115])
+	self.assertTrue(self._cmac.calculate_activation_adresses([0,0,0])== [0, 10101, 20202, 30303])
+	self.assertTrue(self._cmac.calculate_activation_adresses([5.25, 0.37, -0.2])== [408, 10505, 20206, 30307])
 	self.assertIsNotNone(self._cmac.weight_table[41212])
 	self.assertIsNotNone(self._cmac.weight_table[10913])
 	self.assertIsNotNone(self._cmac.weight_table[21014])
@@ -101,26 +101,26 @@ class TestCmac(unittest.TestCase):
  
 
     def test_mapping_shape_all_sensory_cell_configs(self):
-	for sens in self._cmac.sensory_cell_configs:
-	        self.assertTrue(sens.mapping.shape == (sens.num_possible_values, sens.num_active_cells))
+	for sens in self._cmac.signal_configuration:
+	        self.assertTrue(sens.mapping.shape == (sens.num_discret_values, sens.num_active_cells))
 
 class TestLongRange(unittest.TestCase):
     def setUp(self):
         confs = []
-        confs.append(cmac.SensoryCellConfig(0., 1., 100))
-        confs.append(cmac.SensoryCellConfig(0., 1., 100))
+        confs.append(cmac.SignalConfiguration(0., 1., 100))
+        confs.append(cmac.SignalConfiguration(0., 1., 100))
         self._cmac = cmac.CMAC(confs, 4)
 
     def testRun(self):
-        self._cmac.make_weight_table()
+        self._cmac.make_weight_dictionary()
 
 class TestTrain(unittest.TestCase):
     def setUp(self):
         confs = []
-        confs.append(cmac.SensoryCellConfig(-10., 10., 100))
-        confs.append(cmac.SensoryCellConfig(-10., 10., 100))
+        confs.append(cmac.SignalConfiguration(-10., 10., 100))
+        confs.append(cmac.SignalConfiguration(-10., 10., 100))
         _cmac = cmac.CMAC(confs, 4)
-        _cmac.make_weight_table()
+        _cmac.make_weight_dictionary()
         data_in = None
         data_out = array([])
         for i in range(100):
