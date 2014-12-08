@@ -1,6 +1,6 @@
 from numpy import *
 class DataLoader(object):
-	def __init__(self, file_name):
+        def __init__(self, file_name):
 		self._data = None	
 		self._file_name = file_name
 		self._load_data()
