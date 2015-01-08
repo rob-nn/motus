@@ -189,6 +189,19 @@ class SignalConfiguration(object):
 
     def _set_discret_values(self):
         self._discret_values = linspace(self._s_min, self._s_max, self._num_discret_values)
+
+    def get_layer1_vector(self, index):
+        l1_vector = zeros(self.cmac.num_active_cells, int)
+        mod = index % self.num_active_cells
+        value = index
+        for i in range(mod, self.cmac.num_active_cells):
+            l1_vector[i] =  value
+            value = value + 1
+        for i in range(mod):
+            l1_vector[i] = value
+            value = value + 1
+        return l1_vector
+
     @property
     def cmac(self):
         return self._cmac
