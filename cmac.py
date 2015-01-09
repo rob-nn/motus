@@ -1,4 +1,5 @@
 from numpy import *
+import numpy as np
 
 class CMAC(object):
     def __init__(self, signal_configurations, num_active_cells):
@@ -36,7 +37,7 @@ class CMAC(object):
         signals_mapping_values = []
         for i in range(len(self.signal_configuration)):
             index = self.get_discretized_value_index(input_signal_vector[i], self.signal_configuration[i])
-            signals_mapping_values.append(self.signal_configuration[i].mapping[index])
+            signals_mapping_values.append(self.signal_configuration[i].get_layer1_vector(index))
         return array(signals_mapping_values, dtype=int64)
  
     
@@ -152,46 +153,15 @@ class SignalConfiguration(object):
         self._num_discret_values = num_discret_values
         self._cmac = None
         self._desc = desc
+        self._signal_mapping = None
 
     def set_signal_mapping(self):
         self._set_discret_values()
-        temp_map = []
-        i = 0
-        qtd = 0
-        stop = False
-        while True:
-            temp = []
-            for j in range(self.num_active_cells):
-                line = []
-                for k in range(j, self.num_active_cells):
-                    line.append(k)
-                temp.append(line)
-                qtd = qtd + 1
-                if qtd == self.num_discret_values:
-                    stop = True
-                    break 
-            for l in range(len(temp)):
-               for m in range(len(temp[l])):
-                    temp[l][m] = temp[l][m] + i
-            acc = 0 
-            for j in range(self.num_active_cells):
-                if stop and j >= len(temp):
-                    break;
-                if j == 0:
-                    acc = temp[0][-1]
-                for k in range(self.num_active_cells - len(temp[j])):
-                    temp[j].insert(k, acc+k+1)
-                    
-            temp_map.extend(temp)    
-            if stop: break
-            i = i + self.num_active_cells 
-        self._signal_mapping = array(temp_map)
-
     def _set_discret_values(self):
         self._discret_values = linspace(self._s_min, self._s_max, self._num_discret_values)
 
     def get_layer1_vector(self, index):
-        l1_vector = zeros(self.cmac.num_active_cells, int)
+        l1_vector = np.zeros(self.cmac.num_active_cells, np.int)
         mod = index % self.num_active_cells
         value = index
         for i in range(mod, self.cmac.num_active_cells):
@@ -208,9 +178,16 @@ class SignalConfiguration(object):
     @cmac.setter
     def cmac(self, value):
         self._cmac = value
+
     @property
     def mapping(self):
+        if self._signal_mapping == None: 
+            temp_map = []
+            for i  in range(self.num_discret_values):
+                temp_map.append(self.get_layer1_vector(i))
+            self._signal_mapping = array(temp_map)
         return self._signal_mapping
+
     @property
     def discret_values(self):
         return self._discret_values
