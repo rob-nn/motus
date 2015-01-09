@@ -32,7 +32,6 @@ class Motus(cmac.CMAC):
                 data = concatenate((data, new_data), axis = 1)
 
         super(Motus, self).__init__(confs, activations)
-        self.make_weight_dictionary()
         data_out = None
         data_out_test = None
         data_in = None
