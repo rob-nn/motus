@@ -15,7 +15,7 @@ class Motus(cmac.CMAC):
         if configs == None:
             configs = [(9, 15),(10, 15),(11, 15)]
         self.validate_parameters(desc, activations, configs, out_index)
-        loader = gait_loader.loadWalk3() 
+        loader = gait_loader.loadWalk(3) 
         confs = []
         data = None
         for conf in configs: 
@@ -90,31 +90,39 @@ class Motus(cmac.CMAC):
         plt.figure()
         plt.plot(self._data_out)
         plt.show()
-    
-    def fire_test(self):
+
+    def fire_all(self, inputs):
         result = []
-        for data in self._data_test:
+        for data in inputs:
             result.append(self.fire(data))
         return result
 
-    def plot_test(self):
+   
+    def fire_test(self):
+        return self.fire_all(self._data_test)
+
+    def plot_aproximation(self, real, aproximation, time = None):
+        if time == None:
+            t = arange(0, real.shape[0]) * (1./315.)
+        else:
+            t = time
         plt.figure()
         plt.plot(self.t.E)
         
-        t = arange(0, self._data_out_test.shape[0]) *(2.*(1./315.) )
-        test_result = self.fire_test()
-        
-        
         plt.figure()
         plt.hold(True)
-        p1 = plt.plot(t.tolist(), self._data_out_test.tolist(), 'b', linewidth=4)
-        p2 = plt.plot(t.tolist(), test_result, 'r', linewidth=2)
+        p1 = plt.plot(t.tolist(), real, 'b', linewidth=4)
+        p2 = plt.plot(t.tolist(), aproximation, 'r', linewidth=2)
         plt.xlabel('t (segundos)', fontsize=15)
-        plt.ylabel('Velocidades angulares (rads/seg)', fontsize=15)
-        plt.legend(['Joelho humano', 'MISO CMAC'])
+        plt.ylabel('Angular Velocities (rads/seg)', fontsize=15)
+        plt.legend(['Human Knee', 'CMAC Prediction'])
         plt.show()
 
 
+    def plot_test(self):
+        t = arange(0, self._data_out_test.shape[0]) * (2.*(1./315.))
+        test_result = self.fire_test()
+        self.plot_aproximation(self._data_out_test, test_result, t)
 
 class ParameterInvalid(BaseException):
     def __init__(self, description):

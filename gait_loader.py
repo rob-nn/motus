@@ -34,12 +34,12 @@ class DataLoader(object):
 		self._data_descs.append(self._generate_data_desc(3, 'Right angles'))
 		self._data_descs.append(self._generate_data_desc(4, 'Left angular accelarations'))
 		self._data_descs.append(self._generate_data_desc(5, 'Right angular accelerations'))
-		self._data_descs.append(self._generate_data_desc(6, 'Left x angular velocities'))
-		self._data_descs.append(self._generate_data_desc(7, 'Left y angular velocities'))
-		self._data_descs.append(self._generate_data_desc(8, 'Left z angular velocities'))
-		self._data_descs.append(self._generate_data_desc(9, 'Right x angular velocities'))
-		self._data_descs.append(self._generate_data_desc(10, 'Right y angular velocities'))
-		self._data_descs.append(self._generate_data_desc(11, 'Right z angular velocities'))
+		self._data_descs.append(self._generate_data_desc(6, 'Left x velocities'))
+		self._data_descs.append(self._generate_data_desc(7, 'Left y velocities'))
+		self._data_descs.append(self._generate_data_desc(8, 'Left z velocities'))
+		self._data_descs.append(self._generate_data_desc(9, 'Right x velocities'))
+		self._data_descs.append(self._generate_data_desc(10, 'Right y velocities'))
+		self._data_descs.append(self._generate_data_desc(11, 'Right z velocities'))
 
 	def _generate_data_desc(self, index, desc):
 		column = self.data[:, index]
@@ -85,6 +85,5 @@ class DataDesc(object):
         def desc(self):
             return self._desc
 	
-
-def loadWalk3():
-	return DataLoader('./dynamics_data/dynamics_walk3.mat')
+def loadWalk(value):
+	return DataLoader('./dynamics_data/dynamics_walk' + str(value) + '.mat')

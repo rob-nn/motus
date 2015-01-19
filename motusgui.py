@@ -18,6 +18,7 @@ class App(object):
         self._create_top_frame()
         self._create_middle_frame()
         self._create_botton_frame()
+        self._ann = None
 
     def run(self):
         self._root.mainloop()
@@ -121,11 +122,11 @@ class MiddleFrame(Frame):
     def __init__(self, app):
         Frame.__init__(self, app.root)
         self.pack(side=TOP, expand=True, fill=BOTH)
-        Label(self, text= 'Parameters Configuration', font=('Helvetica', '16', 'bold')).pack(side=TOP, expand=True, fill=Y)
+        Label(self, text= 'Knees Parameters', font=('Helvetica', '16', 'bold')).pack(side=TOP, expand=True, fill=Y)
         self.pack_parameters()
 
     def pack_parameters(self):
-        loader = ld.loadWalk3()
+        loader = ld.loadWalk(3)
         descs = loader.data_descs
         self._check_values = []
         self._spins = []
@@ -166,8 +167,10 @@ class BottonFrame(Frame):
     def __init__(self, app):
         Frame.__init__(self, app.root)
         self.pack(side= TOP, expand=True, fill=BOTH)
-        Button(self, text='Run & Plot', \
-            command= app.commands.run_plot).pack(side=LEFT)
+        Button(self, text='Traine & Plot', \
+            command= app.commands.traine_plot).pack(side=LEFT)
+        #Button(self, text='Plot gait 5 aproximation', \
+        #    command = app.commands.gait5_aproximation).pack(side=LEFT)
 
 class Commands(object):
     def __init__(self, app):
@@ -179,6 +182,7 @@ class Commands(object):
         options['parent'] = app.root
         options['title'] = 'Save a motus project file'
         self.filename = None
+        self._ann = None
   
     @property
     def app(self):
@@ -235,22 +239,35 @@ class Commands(object):
     def new_project(self):
         self.app.clear()
 
-    def run_plot(self):
+    def traine_plot(self):
         try:
             if len(self.app.output) ==0:
                 raise motus.ParameterInvalid('Inform the output parameter')
             ann = motus.Motus(self.app.topframe.desc.get(), int(self.app.topframe.activations.get()), self.app.middle_frame.selections, self.app.output[0])
             ann.train(num_iterations = int(self.app.topframe.numiterations.get()))
+            self._ann = ann
         except motus.ParameterInvalid as invalid:
             tkMessageBox.showerror(title= 'Invalid parameter', message= invalid.description, icon=tkMessageBox.ERROR)
         ann.plot_test()
+    def gait5_aproximation(self):
+        if self._ann == None:
+            raise motus.ParameterInvalid('Traine a CMAC before')
+
+        data5 = ld.loadWalk(4)
+        indexes = []
+        for i in self.app.middle_frame.selections:
+           indexes.append(i[0])
+        real = data5.data[:, self.app.output[0]]
+        aproximation = self._ann.fire_all(data5.data[:, indexes])
+        self._ann.plot_aproximation(real, aproximation)
+        
 
 class SelectOutput():
     def __init__(self, app):
         self._app = app
         self._window = Toplevel(app.root)
         self._value = IntVar(self._window)
-        loader = ld.loadWalk3()
+        loader = ld.loadWalk(3)
         self._descs = []
         for desc in loader.data_descs:
             self._descs.append(desc.desc)
