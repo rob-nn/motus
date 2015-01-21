@@ -113,8 +113,8 @@ class Motus(cmac.CMAC):
         plt.hold(True)
         p1 = plt.plot(t.tolist(), real, 'b', linewidth=4)
         p2 = plt.plot(t.tolist(), aproximation, 'r', linewidth=2)
-        plt.xlabel('t (segundos)', fontsize=15)
-        plt.ylabel('Angular Velocities (rads/seg)', fontsize=15)
+        plt.xlabel('t (sec.)', fontsize=15)
+        plt.ylabel('Angular Velocities (rads/sec.)', fontsize=15)
         plt.legend(['Human Knee', 'CMAC Prediction'])
         plt.show()
 
