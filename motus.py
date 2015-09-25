@@ -107,6 +107,8 @@ class Motus(cmac.CMAC):
         else:
             t = time
         plt.figure()
+        plt.xlabel('Iterations', fontsize=15)
+        plt.ylabel('Mean Squared Error', fontsize=15)
         plt.plot(self.t.E)
         
         plt.figure()
